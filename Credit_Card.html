@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>信用卡計算機</title>
+    <style>
+        :root {
+            --primary: #667eea;
+            --primary-hover: #5568d3;
+            --primary-bg: rgba(102, 126, 234, 0.1);
+            --border: #e0e0e0;
+            --muted: #666;
+            --muted-bg: #f8f9fa;
+        }
+        *, *::before, *::after { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--primary) 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,.3);
+            padding: 40px;
+            max-width: 1000px;
+            width: 100%;
+        }
+        h1 { color: #333; text-align: center; margin-bottom: 30px; font-size: 28px; }
+        .content-wrapper { display: flex; gap: 40px; align-items: flex-start; }
+        .input-section, .results-section { flex: 1; min-width: 300px; }
+        @media (max-width: 768px) { .content-wrapper { flex-direction: column; } }
+        .input-group { margin-bottom: 20px; }
+        label { display: block; color: #555; margin-bottom: 8px; font-weight: 600; font-size: 14px; }
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color .3s, box-shadow .3s;
+        }
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+        input:focus {
+            outline: 0;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-bg);
+        }
+        .results { display: none; }
+        .results.show { display: block; }
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,.1);
+        }
+        .results-table tr { border-bottom: 1px solid #f0f0f0; }
+        .results-table tr:last-child { border-bottom: 0; }
+        .results-table td { padding: 12px 15px; font-size: 14px; }
+        .results-table td:first-child { color: var(--muted); font-weight: 600; width: 40%; background: var(--muted-bg); }
+        .results-table td:last-child { color: #333; font-weight: 700; text-align: right; font-size: 16px; }
+        .results-table tr.highlight td:last-child { color: var(--primary); font-size: 18px; }
+        .currency-toggle { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+        .currency-toggle label { margin-bottom: 0; font-size: 14px; }
+        .toggle-buttons { display: flex; gap: 5px; background: #f0f0f0; border-radius: 8px; padding: 3px; }
+        .toggle-btn {
+            padding: 6px 15px;
+            border: 0;
+            border-radius: 6px;
+            background: transparent;
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background .2s, color .2s;
+        }
+        .toggle-btn.active { background: var(--primary); color: #fff; }
+        .toggle-btn:hover { background: var(--border); }
+        .toggle-btn.active:hover { background: var(--primary-hover); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💳 信用卡計算機</h1>
+        
+        <div class="content-wrapper">
+            <div class="input-section">
+                <div class="input-group">
+                    <div class="currency-toggle">
+                        <label for="totalInput">總金額</label>
+                        <div class="toggle-buttons" id="currencyToggle">
+                            <button type="button" class="toggle-btn active" data-currency="RMB">RMB</button>
+                            <button type="button" class="toggle-btn" data-currency="TWD">TWD</button>
+                        </div>
+                    </div>
+                    <input type="number" id="totalInput" placeholder="輸入總金額" step="0.01" min="0">
+                </div>
+
+                <div class="input-group">
+                    <label for="twd">台幣扣款金額 (TWD)</label>
+                    <input type="number" id="twd" placeholder="輸入台幣扣款金額" step="0.01" min="0">
+                </div>
+
+                <div class="input-group">
+                    <label for="fee">手續費 (TWD)</label>
+                    <input type="number" id="fee" placeholder="輸入手續費" step="0.01" min="0">
+                </div>
+            </div>
+
+            <div class="results-section">
+                <div class="results" id="results">
+                    <table class="results-table">
+                        <tr>
+                            <td>未含手續費匯率</td>
+                            <td>
+                                <span id="rateWithoutFee">-</span>
+                            </td>
+                        </tr>
+                        <tr class="highlight">
+                            <td>實含手續費匯率</td>
+                            <td>
+                                <span id="rateWithFee">-</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>實際含手續費總金額</td>
+                            <td>
+                                <span id="totalPaymentAmount">-</span>
+                            </td>
+                        </tr>
+                        <tr class="highlight" id="conversionItem" style="display: none;">
+                            <td id="conversionLabel">實際人民幣總金額</td>
+                            <td>
+                                <span id="conversionAmount">-</span>
+                            </td>
+                        </tr>
+                        <tr class="highlight" id="totalCalculationItem" style="display: none;">
+                            <td>實際需刷卡次數</td>
+                            <td>
+                                <span id="cardCount">-</span>
+                            </td>
+                        </tr>
+                        <tr class="highlight" id="totalPaymentItem" style="display: none;">
+                            <td id="totalPaymentLabel">總支付金額</td>
+                            <td>
+                                <span id="totalPayment">-</span>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const RMB_PER_CARD = 200;
+        let currentCurrency = 'RMB';
+        let $ = {}; // DOM 快取
+
+        function switchCurrency(currency) {
+            currentCurrency = currency;
+            $.currencyToggle.querySelectorAll('.toggle-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.currency === currency);
+            });
+            $.totalInput.placeholder = currency === 'RMB' ? '輸入總金額（每次200人民幣）' : '輸入台幣總金額';
+            calculate();
+        }
+
+        function setRowVisibility(conversion, calculation, payment) {
+            $.conversionItem.style.display = conversion ? 'table-row' : 'none';
+            $.totalCalculationItem.style.display = calculation ? 'table-row' : 'none';
+            $.totalPaymentItem.style.display = payment ? 'table-row' : 'none';
+        }
+
+        function calculate() {
+            const twd = parseFloat($.twd.value);
+            const fee = parseFloat($.fee.value) || 0;
+            const totalInput = parseFloat($.totalInput.value);
+
+            if (!twd || twd <= 0) {
+                $.results.classList.remove('show');
+                return;
+            }
+
+            const totalAmount = twd + fee;
+            const rateWithoutFee = twd / RMB_PER_CARD;
+            const rateWithFee = totalAmount / RMB_PER_CARD;
+
+            $.rateWithoutFee.textContent = rateWithoutFee.toFixed(4) + ' TWD';
+            $.rateWithFee.textContent = rateWithFee.toFixed(4) + ' TWD';
+            $.totalPaymentAmount.textContent = totalAmount.toFixed(2) + ' TWD';
+
+            if (totalInput > 0) {
+                if (currentCurrency === 'RMB') {
+                    const cardCount = Math.ceil(totalInput / RMB_PER_CARD);
+                    const totalPayment = totalInput * rateWithFee;
+                    $.cardCount.textContent = cardCount + ' 次';
+                    $.totalPaymentLabel.textContent = '總支付金額';
+                    $.totalPayment.textContent = totalPayment.toFixed(2) + ' TWD';
+                    setRowVisibility(false, true, true);
+                } else {
+                    const convertedRmb = totalInput / rateWithFee;
+                    const cardCount = Math.ceil(convertedRmb / RMB_PER_CARD);
+                    const actualPayment = cardCount * totalAmount;
+                    $.conversionLabel.textContent = '實際人民幣總金額';
+                    $.conversionAmount.textContent = convertedRmb.toFixed(2) + ' RMB';
+                    $.cardCount.textContent = cardCount + ' 次';
+                    $.totalPaymentLabel.textContent = '本次支付實際差額';
+                    $.totalPayment.textContent = (actualPayment - totalInput).toFixed(2) + ' TWD';
+                    setRowVisibility(true, true, true);
+                }
+            } else {
+                setRowVisibility(false, false, false);
+            }
+            $.results.classList.add('show');
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const ids = ['results', 'totalInput', 'twd', 'fee', 'rateWithoutFee', 'rateWithFee', 'totalPaymentAmount',
+                'conversionItem', 'conversionLabel', 'conversionAmount', 'totalCalculationItem', 'cardCount',
+                'totalPaymentItem', 'totalPaymentLabel', 'totalPayment', 'currencyToggle'];
+            ids.forEach(id => { $[id] = document.getElementById(id); });
+            $.currencyToggle.addEventListener('click', e => {
+                const currency = e.target.dataset.currency;
+                if (currency) switchCurrency(currency);
+            });
+            ['twd', 'fee', 'totalInput'].forEach(id => $[id].addEventListener('input', calculate));
+        });
+    </script>
+</body>
+</html>

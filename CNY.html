@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>大草原計算機</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --stardust: rgba(255, 255, 255, 0.15);
+      --wormhole: #6b5bff;
+      --wormhole-light: #8b7eff;
+      --wormhole-dark: #4a3dcc;
+      --accent-1: rgba(107, 91, 255, 0.1);
+      --accent-2: rgba(107, 91, 255, 0.2);
+      --accent-3: rgba(107, 91, 255, 0.3);
+      --accent-4: rgba(107, 91, 255, 0.4);
+      --accent-5: rgba(107, 91, 255, 0.5);
+      --bg-dark: #0a0a1f;
+      --text-light: #f0f0f5;
+      --card-bg: rgba(30, 30, 60, 0.6);
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --shadow-glow: 0 0 20px var(--accent-4);
+      --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.3);
+      --border-color: var(--accent-3);
+      --border-hover: var(--accent-5);
+      --input-bg: rgba(255, 255, 255, 0.05);
+      --input-hover: rgba(255, 255, 255, 0.08);
+      --input-focus: rgba(255, 255, 255, 0.1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg-dark);
+      color: var(--text-light);
+      font-family: 'Space Mono', monospace;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      overflow-x: hidden;
+    }
+
+    .starfield {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(var(--stardust) 10%, transparent 11%) 0 0/25px 25px,
+                  linear-gradient(to bottom, #000 0%, #1a1a3a 100%);
+      background-size: 200% 200%;
+      animation: warp 120s linear infinite;
+      transform-origin: center;
+      z-index: -1;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 500px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
+      animation: fadeInDown 0.6s ease-out;
+    }
+
+    .header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--wormhole), var(--wormhole-light));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+      filter: drop-shadow(0 0 30px var(--accent-5));
+      letter-spacing: 2px;
+    }
+
+    .main-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 2rem;
+      box-shadow: var(--shadow-card);
+      animation: fadeInUp 0.6s ease-out 0.2s both;
+    }
+
+    .button-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .action-button {
+      background: linear-gradient(135deg, var(--wormhole), var(--wormhole-dark));
+      border: none;
+      padding: 0.9rem 1.5rem;
+      color: var(--text-light);
+      cursor: pointer;
+      border-radius: 12px;
+      font: 700 1rem 'Space Mono', monospace;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 15px var(--accent-3);
+    }
+
+    .action-button::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      left: -100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s;
+    }
+
+    .action-button:hover::before {
+      left: 100%;
+    }
+
+    .action-button:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-glow);
+    }
+
+    .action-button:active {
+      transform: translateY(0);
+    }
+
+    .input-section {
+      margin-bottom: 1.5rem;
+    }
+
+    .input-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .input-wrapper input {
+      width: 100%;
+      background: var(--input-bg);
+      border: 2px solid var(--border-color);
+      color: var(--text-light);
+      padding: 0.9rem 1rem;
+      font: 1rem 'Space Mono', monospace;
+      border-radius: 12px;
+      text-align: center;
+      transition: var(--transition);
+    }
+
+    .input-wrapper input:hover {
+      background: var(--input-hover);
+      border-color: var(--border-hover);
+    }
+
+    .input-wrapper input:focus {
+      outline: none;
+      border-color: var(--wormhole);
+      box-shadow: 0 0 0 3px var(--accent-2);
+      background: var(--input-focus);
+    }
+
+    .mid-price-display {
+      text-align: center;
+      margin-top: 1rem;
+      padding: 0.8rem;
+      background: var(--accent-1);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      font: 700 1.1rem 'Space Mono', monospace;
+      color: var(--wormhole-light);
+      min-height: 2.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .result-section {
+      margin-top: 1.5rem;
+    }
+
+    #resultBox {
+      width: 100%;
+      background: var(--input-bg);
+      border: 2px dashed var(--accent-4);
+      color: var(--text-light);
+      padding: 1.2rem;
+      border-radius: 12px;
+      font: 1rem/1.8 'Space Mono', monospace;
+      resize: none;
+      transition: var(--transition);
+      overflow: hidden;
+      white-space: pre;
+      min-height: 140px;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    #resultBox:hover {
+      background: var(--input-hover);
+      border-color: var(--wormhole);
+      box-shadow: 0 0 20px var(--accent-2);
+    }
+
+    #resultBox:focus {
+      outline: none;
+    }
+
+    .notification {
+      position: fixed;
+      top: 2rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(-100px);
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border-hover);
+      border-radius: 12px;
+      padding: 1rem 1.5rem;
+      color: var(--text-light);
+      font: 700 0.95rem 'Space Mono', monospace;
+      box-shadow: var(--shadow-card);
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: var(--transition);
+      min-width: 200px;
+      text-align: center;
+    }
+
+    .notification.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+      pointer-events: auto;
+    }
+
+    .notification.success {
+      border-color: var(--accent-5);
+      background: linear-gradient(135deg, var(--accent-2), var(--accent-1));
+      box-shadow: 0 0 30px var(--accent-3);
+    }
+
+    .notification.error {
+      border-color: rgba(255, 91, 107, 0.6);
+      background: linear-gradient(135deg, rgba(255, 91, 107, 0.2), rgba(255, 91, 107, 0.1));
+      box-shadow: 0 0 30px rgba(255, 91, 107, 0.3);
+    }
+
+    .notification.warning {
+      border-color: rgba(255, 193, 7, 0.6);
+      background: linear-gradient(135deg, rgba(255, 193, 7, 0.2), rgba(255, 193, 7, 0.1));
+      box-shadow: 0 0 30px rgba(255, 193, 7, 0.3);
+    }
+
+    @keyframes warp {
+      0%, 100% { transform: rotate(0deg) scale(1.2); }
+      50% { transform: rotate(180deg) scale(1.25); }
+    }
+
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 600px) {
+      body { padding: 1rem; }
+      .header h1 { font-size: 1.5rem; }
+      .main-card { padding: 1.5rem; border-radius: 16px; }
+      .button-group, .input-group { grid-template-columns: 1fr; }
+      .input-wrapper input { font-size: 0.9rem; padding: 0.8rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="starfield"></div>
+  <div class="container">
+    <div class="header">
+      <h1>〄 大草原計算機</h1>
+    </div>
+    <div class="main-card">
+      <div class="button-group">
+        <button type="button" class="action-button" onclick="openRatePopup()">台銀</button>
+        <button type="button" class="action-button" onclick="window.open('https://manager.line.biz/account/@687spxpu/richmenu/edit/11648965','_blank')">隼付</button>
+      </div>
+      <div class="input-section">
+        <div class="input-group">
+          <div class="input-wrapper">
+            <input type="text" id="buyAmount" placeholder="買入" oninput="handleFirstInput()" onkeydown="handleKey(event, 'sellAmount')" onpaste="handlePaste(event)" onclick="clearInput(this)">
+          </div>
+          <div class="input-wrapper">
+            <input type="text" id="sellAmount" placeholder="賣出" oninput="calculateTrade()" onkeydown="handleKey(event, 'buyAmount')" onpaste="handlePaste(event)" onclick="clearInput(this)">
+          </div>
+        </div>
+        <div class="mid-price-display" id="midPrice"></div>
+      </div>
+      <div class="result-section">
+        <textarea id="resultBox" readonly onclick="copyResult()"></textarea>
+      </div>
+    </div>
+  </div>
+  <script>
+    const elements = {
+      buyAmount: document.getElementById("buyAmount"),
+      sellAmount: document.getElementById("sellAmount"),
+      midPrice: document.getElementById("midPrice"),
+      resultBox: document.getElementById("resultBox")
+    };
+
+    function showNotification(message, type = "success") {
+      document.querySelector(".notification")?.remove();
+      const el = Object.assign(document.createElement("div"), {
+        className: `notification ${type}`,
+        textContent: message
+      });
+      document.body.appendChild(el);
+      requestAnimationFrame(() => el.classList.add("show"));
+      setTimeout(() => {
+        el.classList.remove("show");
+        setTimeout(() => el.remove(), 300);
+      }, 1000);
+    }
+
+    function copyToClipboard(text, thenNotify = true) {
+      return navigator.clipboard.writeText(text).then(
+        () => thenNotify && showNotification("複製成功", "success"),
+        () => thenNotify && showNotification("複製失敗；檢視權限", "error")
+      );
+    }
+
+    function handleFirstInput() {
+      const input = elements.buyAmount.value;
+      const secondDot = input.indexOf(".", input.indexOf(".") + 1);
+      if (secondDot !== -1) {
+        elements.buyAmount.value = input.slice(0, secondDot - 1);
+        elements.sellAmount.value = input.slice(secondDot - 1);
+        elements.sellAmount.focus();
+        elements.sellAmount.select();
+      }
+      calculateTrade();
+    }
+
+    function calculateTrade() {
+      const buy = parseFloat(elements.buyAmount.value) || 0;
+      const sell = parseFloat(elements.sellAmount.value) || 0;
+      const mid = (buy + sell) / 2;
+      elements.midPrice.textContent = buy > 0 && sell > 0 ? `中價：${mid.toFixed(2)}` : "";
+      if (buy <= 0 || sell <= 0) {
+        elements.resultBox.value = "";
+        return;
+      }
+      const round3 = (v) => Math.ceil(v * 1000) / 1000;
+      const prices = [0.05, 0.03, 0.015].map((d) => round3(mid + d));
+      const labels = ["基礎成本", "滿萬優惠", "五萬優惠"];
+      elements.resultBox.value = labels.map((l, i) => `${l}：${prices[i].toFixed(3)}`).join("\n");
+    }
+
+    function copyResult() {
+      const text = elements.resultBox.value.trim();
+      if (!text) {
+        showNotification("請輸入數據", "warning");
+        return;
+      }
+      copyToClipboard(text);
+    }
+
+    function openRatePopup() {
+      const w = 600, h = 400;
+      const left = (screen.width - w) / 2;
+      const top = (screen.height - h) / 2;
+      window.open("https://rate.bot.com.tw/xrt?Lang=zh-TW", "ratePopup",
+        `width=${w},height=${h},top=${top},left=${left},scrollbars=yes`);
+    }
+
+    function handleKey(event, nextId) {
+      if (event.key !== "Enter") return;
+      const next = elements[nextId];
+      if (next) {
+        next.value = "";
+        calculateTrade();
+        next.focus();
+      }
+    }
+
+    function handlePaste(event) {
+      event.preventDefault();
+      const text = (event.clipboardData || window.clipboardData).getData("text").trim();
+      const values = /\s|\t/.test(text) ? text.split(/\s+|\t/) : (text.match(/\d\.\d{2,3}/g) || []);
+      if (values.length >= 2) {
+        elements.buyAmount.value = values[0];
+        elements.sellAmount.value = values[1];
+        calculateTrade();
+        if (event.target.id === "buyAmount" && elements.resultBox.value.trim())
+          copyToClipboard(elements.resultBox.value);
+      } else if (values.length === 1) {
+        event.target.value = values[0];
+        calculateTrade();
+      }
+    }
+
+    function clearInput(input) {
+      input.value = "";
+      calculateTrade();
+    }
+
+    calculateTrade();
+  </script>
+</body>
+</html>

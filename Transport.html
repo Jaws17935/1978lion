@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>運費計算工具</title>
+    <style>
+        :root {
+            --bg-dark: #1a1a1a;
+            --bg-card: #2d2d2d;
+            --bg-box: #333333;
+            --border-color: #404040;
+            --text-primary: #e0e0e0;
+            --text-secondary: #666;
+            --accent: #ff6b00;
+            --accent-hover: #ff8533;
+            --transition: all 0.3s ease;
+            --hover-shadow: 0 2px 8px rgba(255, 107, 0, 0.2);
+            --btn-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        body { font-family: 'Microsoft JhengHei', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: var(--bg-dark); color: var(--text-primary); }
+        .calculator { background: var(--bg-card); padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); max-width: 500px; width: 100%; margin: 0 auto; border: 1px solid var(--border-color); position: relative; }
+        h1 { text-align: left; color: var(--text-primary); margin: 0; font-size: 1.3em; line-height: 1.3em; flex: 1; }
+        .location-container { display: flex; flex-direction: column; gap: 15px; margin-bottom: 25px; }
+        .location-box, .input-row {
+            width: 100%; padding: 15px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-box); transition: var(--transition); box-sizing: border-box; position: relative;
+        }
+        .location-box { margin-bottom: 15px; }
+        .location-box h2, .input-row h2 {
+            margin: 0 0 10px; color: var(--text-primary); padding-bottom: 8px; font-size: 1em; text-align: left; display: flex; align-items: center; justify-content: space-between; width: 100%; white-space: nowrap; border-bottom: 2px solid var(--accent);
+        }
+        .input-row h2 { font-size: 1.1em; margin-bottom: 15px; }
+        .location-box h2 span { flex: 1; }
+        .title-container { display: flex; align-items: flex-end; width: 100%; margin-bottom: 20px; border-bottom: 2px solid var(--accent); padding-bottom: 10px; box-sizing: border-box; }
+        .location-box:hover, .input-row:hover { box-shadow: var(--hover-shadow); transform: translateY(-1px); }
+        .stop-point-box { cursor: default; position: relative; }
+        .adjust-buttons { position: absolute; top: 10px; right: 40px; display: flex; gap: 4px; }
+        .up-btn, .down-btn, .delete-button, .add-stop-btn {
+            width: 24px; height: 24px; border: none; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: var(--transition); box-shadow: var(--btn-shadow); flex-shrink: 0; padding: 0; line-height: 1;
+        }
+        .up-btn, .down-btn, .add-stop-btn { background: var(--accent); color: #fff; font-size: 14px; }
+        .up-btn:hover, .down-btn:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 3px 6px rgba(0,0,0,0.3); }
+        .add-stop-btn { margin-left: auto; font-size: 18px; }
+        .add-stop-btn:hover { background: var(--accent-hover); transform: scale(1.1); box-shadow: 0 3px 6px rgba(0,0,0,0.3); }
+        .add-stop-btn:disabled { background: #666; cursor: not-allowed; transform: none; }
+        .delete-button { position: absolute; top: 10px; right: 10px; font-size: 16px; color: var(--accent); background: rgba(255, 107, 0, 0.1); }
+        .delete-button:hover { background: rgba(255, 107, 0, 0.2); transform: scale(1.1); }
+        .form-group {
+            margin-bottom: 10px; display: flex; justify-content: center; align-items: center; flex-direction: column; position: relative; width: 100%; transition: margin-bottom 0.3s ease;
+        }
+        .form-group.has-error { margin-bottom: 30px; }
+        .input-row .form-group { margin-bottom: 8px; }
+        @media (min-width: 768px) { .input-row .form-group { width: 100%; } }
+        .error-message { color: var(--accent); font-size: 0.8em; margin-top: 5px; text-align: center; position: absolute; bottom: -20px; left: 0; right: 0; }
+        label { display: block; margin-bottom: 6px; font-weight: bold; color: #555; font-size: 0.95em; }
+        input {
+            width: 90%; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 4px; box-sizing: border-box; font-size: 13px; transition: var(--transition); margin: 0 auto; background: var(--bg-card); color: var(--text-primary);
+        }
+        input::placeholder { color: var(--text-secondary); opacity: 0.8; }
+        input[type="date"].date-picker {
+            width: 100px; height: 24px; padding: 0 2px; margin: 0 0 -2px; background: transparent; border: none; color: var(--text-primary); font-size: 12px; font-family: inherit; text-align: right; line-height: 24px; cursor: pointer; outline: none; align-self: flex-end;
+            -webkit-appearance: none; appearance: none; z-index: 1;
+        }
+        .date-picker::-webkit-calendar-picker-indicator { display: none; }
+        @media (min-width: 769px) { .date-picker { width: 120px; height: 30px; line-height: 30px; } }
+        .input-row { margin-bottom: 25px; }
+        .time-input-group, .distance-input-group {
+            display: flex; align-items: center; justify-content: center; gap: 4px; flex-wrap: nowrap; background: var(--bg-card); padding: 5px; border-radius: 4px; border: 1px solid var(--border-color); width: 90%; margin: 0 auto; position: relative; transition: var(--transition);
+        }
+        .distance-input-group:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.05); transform: translateY(-1px); }
+        .time-input-group::after { content: ''; position: absolute; left: 50%; top: 8px; bottom: 8px; width: 1px; background: var(--text-primary); transform: translateX(-50%); }
+        .time-input-group input { width: 45%; padding: 3px; text-align: center; font-size: 13px; border: none; border-radius: 0; background: transparent; margin: 0; }
+        .time-input-group input::placeholder { text-align: center; }
+        .distance-input-group input { width: 100%; padding: 3px; text-align: center; font-size: 13px; border: none; border-radius: 0; background: transparent; margin: 0; }
+        .time-input-group input:focus, .distance-input-group input:focus { border-color: #4CAF50; box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1); }
+        input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+        input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .button-group { display: flex; justify-content: center; align-items: center; gap: 10px; margin: 20px 0; flex-wrap: wrap; width: 100%; padding: 0 10px; box-sizing: border-box; }
+        .nav-button, .copy-btn, .modal-button {
+            padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: bold; transition: var(--transition); white-space: nowrap; min-width: 100px; text-align: center; display: flex; align-items: center; justify-content: center; color: #fff; text-decoration: none; box-sizing: border-box; width: 100%; max-width: 200px; margin: 0 auto;
+        }
+        .nav-button { background: #2196f3; }
+        .nav-button:hover { background: #1976d2; transform: translateY(-1px); box-shadow: var(--btn-shadow); }
+        .copy-btn { background: #9c27b0; }
+        .copy-btn:hover { background: #7b1fa2; transform: translateY(-1px); box-shadow: var(--btn-shadow); }
+        .modal-button:disabled { background: #666 !important; cursor: not-allowed !important; }
+        .modal-button.contact-phone { background: var(--accent); }
+        .modal-button.contact-line { background: #00c300; }
+        .modal-button.contact-cancel { background: #666; }
+        .modal-button span { margin-right: 8px; }
+        .total-fare {
+            margin: 10px auto 0; padding: 8px; background: var(--bg-card); border-radius: 6px; border: 1px solid var(--border-color); text-align: center; width: 90%; box-shadow: 0 2px 4px rgba(0,0,0,0.05); min-height: 35px; display: flex; align-items: center; justify-content: center;
+        }
+        .total-fare p { margin: 0; color: var(--text-primary); font-size: 1.3em; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0; width: 100%; text-align: center; }
+        .total-fare .amount { font-weight: bold; color: var(--accent); font-size: 1.3em; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .total-fare .amount:empty { color: var(--text-secondary); }
+        input.invalid, .invalid { border-color: #f44336; box-shadow: 0 0 0 2px rgba(244, 67, 54, 0.1); }
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content {
+            background: var(--bg-card); padding: 25px; border-radius: 8px; max-width: 400px; width: 90%; box-shadow: 0 4px 20px rgba(0,0,0,0.3); border: 1px solid var(--border-color); display: flex; flex-direction: column; align-items: center; justify-content: space-between; min-height: 300px; animation: modalFadeIn 0.3s ease;
+        }
+        .modal-title { color: var(--text-primary); font-size: 1.2em; font-weight: bold; margin-bottom: 15px; border-bottom: 2px solid var(--accent); padding-bottom: 10px; width: 100%; }
+        .modal-message { color: var(--text-primary); font-size: 1em; line-height: 1.5; margin-bottom: 20px; width: 100%; flex: 1; display: flex; align-items: center; justify-content: center; text-align: center; }
+        .modal-message + .modal-message { margin-top: 20px; }
+        .contact-buttons { display: flex; flex-direction: column; gap: 12px; width: 100%; align-items: center; }
+        @keyframes modalFadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+    <div id="warningModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-message">
+                📝 使用說明 📝<br>
+                請填寫聯絡人、聯絡電話、收送地址<br>
+                接著點選【查看行程】查看GOOGLE地圖<br>
+                並將顯示的時間里程填入【運費初步估算】<br>
+                如果只是想初步估價可單填地址試算
+            </div>
+            <button id="confirmButton" class="modal-button" disabled>⚠️ 使用前必讀 ⚠️</button>
+            <div class="modal-message">
+                ❗ 重要提醒 ❗<br>
+                本運費計算工具僅供初步試算使用<br>
+                實際派車及運費將以線上客服答覆為準<br>
+                最終報價將因實際路況、需運輸物品、路況等因素而定
+            </div>
+        </div>
+    </div>
+    <div class="calculator">
+        <div class="title-container">
+            <h1>運費計算工具</h1>
+            <input type="date" id="datePicker" class="date-picker">
+        </div>
+        <div class="location-container">
+            <div class="location-box">
+                <h2>
+                    <span>出發地資訊</span>
+                    <button type="button" id="btnAddStop" class="add-stop-btn" title="新增停靠點">+</button>
+                </h2>
+                <div class="form-group">
+                    <input type="text" id="startContact" placeholder="聯絡人" required>
+                </div>
+                <div class="form-group">
+                    <input type="text" id="startPhone" placeholder="聯絡電話" required>
+                </div>
+                <div class="form-group">
+                    <input type="text" id="startAddress" placeholder="出發地點" required>
+                </div>
+            </div>
+            <div id="stopPointsContainer">
+                <!-- 中途停靠點將在這裡動態添加 -->
+            </div>
+            <div class="location-box">
+                <h2>目的地資訊</h2>
+                <div class="form-group">
+                    <input type="text" id="destContact" placeholder="聯絡人" required>
+                </div>
+                <div class="form-group">
+                    <input type="text" id="destPhone" placeholder="聯絡電話" required>
+                </div>
+                <div class="form-group">
+                    <input type="text" id="destAddress" placeholder="目的地點" required>
+                </div>
+            </div>
+        </div>
+        <div class="button-group">
+            <button type="button" id="btnEstimateTrip" class="nav-button">查看行程</button>
+        </div>
+        <div class="input-row">
+            <h2>運費初步估算</h2>
+            <div class="form-group">
+                <div class="time-input-group">
+                    <input type="number" id="hours" min="0" placeholder="小時">
+                    <input type="number" id="minutes" min="0" max="59" placeholder="分鐘">
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="distance-input-group">
+                    <input type="number" id="distance" required min="0" placeholder="公里">
+                </div>
+            </div>
+            <div id="totalFare" class="total-fare">
+                <p>總運費 <span class="amount"></span></p>
+            </div>
+        </div>
+        <div class="button-group">
+            <button type="button" id="btnCopyRoute" class="copy-btn">複製行程</button>
+        </div>
+        <div class="button-group">
+            <button type="button" id="btnContact" class="nav-button">我要聯繫客服；取得精確報價</button>
+        </div>
+    </div>
+
+    <script>
+        const MAX_STOP_POINTS = 5;
+        const $ = id => document.getElementById(id);
+        const $$ = sel => document.querySelectorAll(sel);
+
+        function startCountdown() {
+            const btn = $('confirmButton');
+            if (!btn) return;
+            let n = 3;
+            const t = setInterval(() => {
+                if (--n <= 0) {
+                    clearInterval(t);
+                    btn.textContent = '我知道了';
+                    btn.disabled = false;
+                    btn.style.backgroundColor = 'var(--accent)';
+                    btn.style.cursor = 'pointer';
+                    btn.onclick = () => { $('warningModal').style.display = 'none'; };
+                }
+            }, 1000);
+        }
+
+        function initDatePicker() {
+            const el = $('datePicker');
+            if (!el) return;
+            el.value = new Date().toISOString().slice(0, 10);
+            const open = e => { e.preventDefault(); el.showPicker?.(); };
+            el.addEventListener('click', open);
+            el.addEventListener('touchstart', open);
+        }
+
+        function initFareInputs() {
+            ['hours', 'minutes', 'distance'].forEach(id => {
+                const el = $(id);
+                if (el) { el.addEventListener('input', updateResult); el.addEventListener('blur', updateResult); }
+            });
+            const amount = $('totalFare')?.querySelector('.amount');
+            if (amount) amount.textContent = '';
+        }
+
+        function initPhoneDelegation() {
+            const isPhone = el => el?.getAttribute('placeholder') === '聯絡電話';
+            document.body.addEventListener('input', e => { if (isPhone(e.target)) validatePhoneNumber(e.target); });
+            document.body.addEventListener('blur', e => { if (isPhone(e.target)) validatePhoneNumber(e.target); });
+            document.body.addEventListener('change', e => { if (isPhone(e.target)) validatePhoneNumber(e.target); });
+            document.body.addEventListener('keypress', e => {
+                if (isPhone(e.target) && !/[\d-]/.test(e.key)) e.preventDefault();
+            });
+            document.body.addEventListener('paste', e => {
+                if (!isPhone(e.target)) return;
+                e.preventDefault();
+                e.target.value = (e.clipboardData || window.clipboardData).getData('text');
+                validatePhoneNumber(e.target);
+            });
+        }
+
+        function initEnterKeyNav() {
+            const inputs = $$('input[type="text"], input[type="number"]');
+            inputs.forEach((input, i) => {
+                input.addEventListener('focus', function() { const v = this.value; this.value = ''; this.value = v; });
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') { e.preventDefault(); const next = inputs[i + 1]; if (next) next.focus(); }
+                });
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const modal = $('warningModal');
+            if (modal) { modal.style.display = 'flex'; startCountdown(); }
+            initDatePicker();
+            initFareInputs();
+            initPhoneDelegation();
+            initEnterKeyNav();
+            $('stopPointsContainer')?.addEventListener('click', onStopPointAction);
+            $('btnAddStop')?.addEventListener('click', addStopPoint);
+            $('btnEstimateTrip')?.addEventListener('click', estimateTrip);
+            $('btnCopyRoute')?.addEventListener('click', copyRoute);
+            $('btnContact')?.addEventListener('click', showContactOptions);
+        });
+
+        function onStopPointAction(e) {
+            const box = e.target.closest('.stop-point-box');
+            if (!box) return;
+            const container = $('stopPointsContainer');
+            const list = Array.from(container.children);
+            const idx = list.indexOf(box);
+            if (e.target.classList.contains('up-btn') && idx > 0) {
+                container.insertBefore(box, list[idx - 1]);
+                updateStopPointNumbers();
+            } else if (e.target.classList.contains('down-btn') && idx < list.length - 1) {
+                container.insertBefore(box, list[idx + 1].nextSibling);
+                updateStopPointNumbers();
+            } else if (e.target.classList.contains('delete-button')) {
+                box.remove();
+                updateStopPointNumbers();
+                updateAddButtonState();
+            }
+        }
+
+        function addStopPoint() {
+            const container = $('stopPointsContainer');
+            if (!container || container.children.length >= MAX_STOP_POINTS) {
+                alert(`最多只能新增${MAX_STOP_POINTS}個中途停靠點`);
+                return;
+            }
+            const n = container.children.length + 1;
+            const box = document.createElement('div');
+            box.className = 'location-box stop-point-box';
+            box.innerHTML = `
+                <h2>中途停靠點${n}</h2>
+                <div class="form-group"><input type="text" placeholder="聯絡人"></div>
+                <div class="form-group"><input type="text" placeholder="聯絡電話"></div>
+                <div class="form-group"><input type="text" placeholder="停靠地點"></div>
+                <div class="adjust-buttons"><button type="button" class="up-btn">↑</button><button type="button" class="down-btn">↓</button></div>
+                <div class="delete-button">✕</div>
+            `;
+            container.appendChild(box);
+            updateStopPointNumbers();
+            updateAddButtonState();
+        }
+
+        function updateAddButtonState() {
+            const container = $('stopPointsContainer');
+            const addBtn = document.querySelector('.add-stop-btn');
+            if (addBtn && container) {
+                const atMax = container.children.length >= MAX_STOP_POINTS;
+                addBtn.disabled = atMax;
+                addBtn.style.opacity = atMax ? '0.5' : '1';
+            }
+        }
+
+        function updateStopPointNumbers() {
+            $$('.stop-point-box').forEach((box, i) => {
+                const n = i + 1;
+                box.id = `stopPoint${n}`;
+                const h2 = box.querySelector('h2');
+                if (h2) h2.textContent = `中途停靠點${n}`;
+                const contact = box.querySelector('input[placeholder="聯絡人"]');
+                const phone = box.querySelector('input[placeholder="聯絡電話"]');
+                const addr = box.querySelector('input[placeholder="停靠地點"]');
+                if (contact) contact.id = `stop${n}Contact`;
+                if (phone) phone.id = `stop${n}Phone`;
+                if (addr) addr.id = `stop${n}Address`;
+            });
+        }
+
+        function updateResult() {
+            const distance = parseFloat($('distance')?.value) || 0;
+            const hours = parseFloat($('hours')?.value) || 0;
+            const minutes = parseFloat($('minutes')?.value) || 0;
+            const totalFareDiv = $('totalFare');
+            if (!totalFareDiv) return;
+            if (!distance && !hours && !minutes) {
+                totalFareDiv.querySelector('p').innerHTML = '總運費 <span class="amount"></span>';
+                return;
+            }
+            const totalMinutes = hours * 60 + minutes;
+            const distanceCost = distance <= 1.25 ? 100 : 100 + (distance - 1.25) * 16;
+            const totalCost = distanceCost + totalMinutes * 8;
+            totalFareDiv.querySelector('p').innerHTML = `<span class="amount">≈ ${Math.round(totalCost).toLocaleString()} 元</span>`;
+        }
+
+        function getStopPoints() {
+            return Array.from($$('.stop-point-box'))
+                .map(b => b.querySelector('input[placeholder="停靠地點"]')?.value)
+                .filter(Boolean);
+        }
+
+        function estimateTrip() {
+            const start = $('startAddress')?.value?.trim();
+            const dest = $('destAddress')?.value?.trim();
+            if (!start || !dest) { showAlert('請輸入出發地和目的地地址'); return; }
+            const waypoints = getStopPoints();
+            let url = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(start)}&destination=${encodeURIComponent(dest)}&travelmode=driving`;
+            if (waypoints.length) url += `&waypoints=${waypoints.map(p => encodeURIComponent(p)).join('|')}`;
+            window.open(url, '_blank');
+        }
+
+        function showAlert(message) {
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay';
+            overlay.style.display = 'flex';
+            overlay.innerHTML = `<div class="modal-content"><div class="modal-message" style="white-space:pre-line">${message}</div><button type="button" class="modal-button">確定</button></div>`;
+            overlay.querySelector('.modal-button').onclick = () => overlay.remove();
+            document.body.appendChild(overlay);
+        }
+
+        function copyRoute() {
+            const start = $('startAddress')?.value;
+            const dest = $('destAddress')?.value;
+            if (!start || !dest) { showAlert('出發地、目的地\n無任何資料，請再次確認'); return; }
+            let text = `您好~我要確認以下行程報價：\n\n==========================\n出發地\n姓名：${$('startContact')?.value || ''}\n電話：${$('startPhone')?.value || ''}\n位置：${start}\n\n`;
+            $$('.stop-point-box').forEach((box, i) => {
+                const addr = box.querySelector('input[placeholder="停靠地點"]')?.value;
+                if (addr) {
+                    const contact = box.querySelector('input[placeholder="聯絡人"]')?.value || '';
+                    const phone = box.querySelector('input[placeholder="聯絡電話"]')?.value || '';
+                    text += `==========================\n中途停靠點${i + 1}\n姓名：${contact}\n電話：${phone}\n位置：${addr}\n\n`;
+                }
+            });
+            text += `==========================\n目的地\n姓名：${$('destContact')?.value || ''}\n電話：${$('destPhone')?.value || ''}\n位置：${dest}`;
+            navigator.clipboard.writeText(text).then(() => showAlert('本次預估行程已複製；請直接張貼詢價即可')).catch(() => showAlert('複製失敗，請手動複製'));
+        }
+
+        function showContactOptions() {
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay';
+            overlay.style.display = 'flex';
+            overlay.innerHTML = `
+                <div class="modal-content">
+                    <div class="contact-buttons">
+                        <a href="tel:02-6604-4078,168" class="modal-button contact-phone"><span>📞</span>客服專線</a>
+                        <a href="https://line.me/ti/p/O2eWb5quy2" target="_blank" class="modal-button contact-line"><span>💬</span>文字客服</a>
+                        <button type="button" class="modal-button contact-cancel"><span>🤔</span>我再想想</button>
+                    </div>
+                </div>
+            `;
+            overlay.querySelector('.contact-cancel').onclick = () => overlay.remove();
+            document.body.appendChild(overlay);
+        }
+
+        function validatePhoneNumber(input) {
+            if (!input) return;
+            input.value = input.value.replace(/[^\d-]/g, '');
+            const digits = input.value.replace(/\D/g, '');
+            const parent = input.parentElement;
+            parent?.querySelector('.error-message')?.remove();
+            if (digits) {
+                const ok = /^09\d{8}$/.test(digits) || /^(02|03|04|05|06|07|08)\d{7,8}$/.test(digits);
+                if (!ok) {
+                    input.classList.add('invalid', 'has-error');
+                    parent?.classList.add('has-error');
+                    const err = document.createElement('div');
+                    err.className = 'error-message';
+                    err.textContent = '請輸入有效的電話號碼';
+                    parent?.appendChild(err);
+                    return;
+                }
+            }
+            input.classList.remove('invalid', 'has-error');
+            parent?.classList.remove('has-error');
+        }
+    </script>
+</body>
+</html>

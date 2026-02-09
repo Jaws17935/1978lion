@@ -1,0 +1,31 @@
+# ========== 金鑰與敏感資料（絕不推送） ==========
+API KEY/
+*.key
+*.pem
+*.p12
+.env
+.env.*
+*.env
+secrets/
+secret*
+*secret*
+config.local.*
+*.local.js
+credentials*.json
+*-credentials*.json
+firebase-adminsdk*.json
+serviceAccount*.json
+appconfig*.json
+
+# ========== 系統與編輯器 ==========
+.DS_Store
+Thumbs.db
+*.log
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# ========== 本腳本產生的暫存 ==========
+.gitignore.bak

@@ -1,0 +1,1808 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商品銷售總表</title>
+    <style>
+        :root {
+            --primary-color: #00ffcc;
+            --danger-color: #ff3366;
+            --background-gradient: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            --input-bg: rgba(0, 255, 204, 0.1);
+            --input-focus-bg: rgba(0, 255, 204, 0.15);
+            --input-focus-shadow: 0 0 8px rgba(0, 255, 204, 0.2);
+            --btn-hover-bg: rgba(0, 255, 204, 0.2);
+            --btn-hover-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+            --glow-box: 0 0 20px rgba(0, 255, 204, 0.3);
+            --thead-bg: rgb(15, 12, 41);
+            --modal-bg: rgba(15, 12, 41, 0.98);
+            --border-subtle: rgba(0, 255, 204, 0.3);
+            --placeholder-color: rgba(0, 255, 204, 0.5);
+            --glow-cyan: rgba(0, 255, 204, 0.3);
+            --danger-bg: rgba(255, 51, 102, 0.1);
+            --danger-hover: rgba(255, 51, 102, 0.2);
+            --view-row-bg: rgba(0, 255, 204, 0.15);
+            --view-cell-bg: rgba(0, 255, 204, 0.25);
+        }
+        body { margin: 0; padding: 20px; background: var(--background-gradient); color: var(--primary-color); font-family: 'Arial', sans-serif; }
+        .container { max-width: 1800px; margin: 0 auto; background: rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; backdrop-filter: blur(10px); box-shadow: var(--glow-box); }
+        .title-container { position: relative; text-align: center; margin-bottom: 12px; }
+        h1 {
+            font-size: 2rem;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(0, 255, 204, 0.7),
+                        0 0 20px rgba(0, 255, 204, 0.5),
+                        0 0 30px rgba(0, 255, 204, 0.3);
+            cursor: pointer;
+            display: inline-block;
+            padding: 0.6rem 1.2rem;
+            color: var(--primary-color);
+            transition: all 0.3s ease;
+            position: relative;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        h1:hover {
+            text-shadow: 0 0 15px rgba(0, 255, 204, 0.9),
+                        0 0 25px rgba(0, 255, 204, 0.7),
+                        0 0 35px rgba(0, 255, 204, 0.5);
+            transform: scale(1.05);
+        }
+
+        h1::before, h1::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 3px;
+            background: var(--primary-color);
+            transition: width 0.3s ease;
+        }
+        h1::before { top: 0; left: 0; }
+        h1::after { bottom: 0; right: 0; }
+        h1:hover::before, h1:hover::after { width: 100%; }
+        .table-container { margin-top: 12px; width: 100%; max-height: calc(100vh - 280px); overflow-y: auto; position: relative; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed; margin-bottom: 0; background: rgba(0,0,0,0.5); border-radius: 8px; }
+
+        thead, thead tr, th, .simplified-view thead, .simplified-view thead tr, .simplified-view th {
+            background: var(--thead-bg) !important;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            backdrop-filter: none;
+            opacity: 1;
+        }
+        th { color: var(--primary-color); font-weight: bold; font-size: 0.8em; text-align: center; padding: 8px 4px; border: 1px solid var(--border-subtle); box-shadow: 0 2px 4px rgba(0,0,0,.2); }
+        td { padding: 4px; text-align: center; border: 1px solid var(--border-subtle); color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.85em; }
+        tr { height: 34px; transition: background-color 0.2s ease; }
+        .pagination { display: flex; justify-content: center; gap: 6px; margin-top: 12px; padding: 6px 0; }
+        .pagination button { min-width: 32px; height: 28px; }
+        .pagination button.active { background: rgba(0,255,204,0.3); box-shadow: 0 0 10px rgba(0,255,204,0.5); }
+        .password-input { display: block; width: 100%; min-width: 120px; max-width: 200px; height: 44px; margin: 0 auto; padding: 0 16px; box-sizing: border-box; background: var(--input-bg); border: 1px solid var(--primary-color); border-radius: 6px; color: var(--primary-color); font-size: 1.25rem; text-align: center; letter-spacing: 6px; }
+        .password-input::placeholder { color: var(--placeholder-color); letter-spacing: 2px; }
+        .password-input:focus { outline: none; background: var(--input-focus-bg); box-shadow: var(--input-focus-shadow); }
+        .table-container::-webkit-scrollbar { width: 5px; height: 5px; }
+        .table-container::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 3px; }
+        .table-container::-webkit-scrollbar-thumb { background: var(--glow-cyan); border-radius: 3px; transition: background 0.3s ease; }
+        .table-container::-webkit-scrollbar-thumb:hover { background: rgba(0,255,204,0.4); }
+        .action-buttons { margin-bottom: 10px; display: flex; gap: 8px; justify-content: space-between; align-items: center; padding: 0 4px; }
+        .action-buttons .left-buttons { display: flex; gap: 10px; align-items: center; }
+
+        .right-settings, .action-buttons .right-settings { display: flex; align-items: center; flex-wrap: nowrap; gap: 8px; }
+        .action-buttons .right-settings { gap: 6px; }
+        .setting-item { display: flex; align-items: center; gap: 8px; margin-bottom: 0; width: auto; min-width: 45px; }
+        .setting-item input { padding: 6px 4px; background: var(--input-bg); border: 1px solid var(--primary-color); border-radius: 4px; color: #fff; width: auto; min-width: 45px; text-align: center; height: 32px; box-sizing: border-box; font-size: 0.9em; transition: all 0.3s ease; }
+        .setting-item input:focus { background: var(--input-focus-bg); box-shadow: var(--input-focus-shadow); }
+        .setting-item input::placeholder { color: var(--placeholder-color); font-size: 0.85em; width: auto; min-width: 30px; }
+        .action-buttons .right-settings .setting-item { gap: 4px; min-width: 42px !important; }
+        .action-buttons .right-settings .setting-item input { padding: 4px !important; min-width: 42px !important; max-width: 55px !important; height: 26px; font-size: 0.85em; }
+        .action-buttons .right-settings input[type="number"] { min-width: 45px !important; max-width: 60px !important; }
+        button { padding: 4px 8px; background: var(--input-bg); border: 1px solid var(--primary-color); color: var(--primary-color); border-radius: 4px; cursor: pointer; transition: all 0.3s ease; font-size: 0.85em; min-width: 75px; height: 28px; display: flex; align-items: center; justify-content: center; text-align: center; }
+        button:hover { background: var(--btn-hover-bg); box-shadow: var(--btn-hover-shadow); }
+        .search-box { margin-bottom: 12px; display: flex; gap: 8px; padding: 0 4px; }
+        .search-box input { flex: 1; padding: 3px 10px; height: 24px; background: var(--input-bg); border: 1px solid var(--primary-color); border-radius: 4px; color: var(--primary-color); font-weight: bold; font-size: 0.8em; transition: all 0.3s ease; }
+        .search-box input:focus { background: var(--input-focus-bg); box-shadow: var(--input-focus-shadow); }
+        .search-box input::placeholder { color: var(--placeholder-color); font-size: 0.8em; }
+        input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; appearance: none; margin: 0; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; justify-content: center; align-items: center; }
+        .modal.show { display: flex; }
+        .modal-content { background: var(--modal-bg); padding: 15px; border-radius: 12px; border: 1px solid var(--primary-color); box-shadow: var(--glow-box); min-width: 280px; max-width: 320px; max-height: 90vh; display: flex; flex-direction: column; position: relative; }
+        .modal-header { display: block; margin-bottom: 12px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 6px; position: relative; }
+        .modal-header h2 { color: var(--primary-color); margin: 0; font-size: 1em; text-align: center; width: 100%; }
+        .modal-content-info { border: 1px solid var(--primary-color); }
+        .modal-content-info .modal-body { color: var(--primary-color); text-align: center; font-size: 1.1em; }
+        .modal-footer .btn-info { border: 1px solid var(--primary-color); color: var(--primary-color); background: var(--input-bg); }
+        .modal-title-danger { color: var(--danger-color); text-align: center; margin: 0; }
+        .modal-body { color: #fff; margin-bottom: 12px; text-align: center; flex: 1 1 auto; padding: 8px 0; }
+        .modal-footer { display: flex; justify-content: center; gap: 8px; margin-top: 4px; }
+        .modal-footer button { padding: 6px 12px; border-radius: 4px; cursor: pointer; transition: all 0.3s ease; font-size: 0.9em; min-width: 70px; border: 1px solid var(--primary-color); color: var(--primary-color); background: var(--input-bg); }
+        .modal-footer button:hover { background: var(--btn-hover-bg); box-shadow: var(--btn-hover-shadow); }
+        .modal-footer button.cancel { background: var(--danger-bg); border-color: var(--danger-color); color: var(--danger-color); }
+        .modal-footer button.cancel:hover { background: var(--danger-hover); }
+        th:nth-child(1), td:nth-child(1) { width: 30%; text-align: center; }
+        th:nth-child(n+2):nth-child(-n+15), td:nth-child(n+2):nth-child(-n+15) { width: 6.36%; text-align: center; }
+        .product-name { font-size: 0.9em; text-align: center; display: block; cursor: pointer; transition: all 0.3s ease; color: var(--primary-color) !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 4px; }
+        .product-name.selected { color: #ff0000 !important; }
+        tr.viewing { background-color: var(--view-row-bg) !important; }
+        tr.viewing td { border: none !important; }
+        .product-checkbox { margin-right: 8px; cursor: pointer; width: 16px; height: 16px; display: none; }
+        .select-all-container { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; padding: 0 4px; width: 100%; box-sizing: border-box; }
+        .confirm-delete-btn { margin-left: 0; padding: 6px 12px; font-size: 0.85em; background: var(--danger-bg); border-color: var(--danger-color); color: var(--danger-color); min-width: 70px; height: 28px; }
+        .confirm-delete-btn:hover { background: var(--danger-hover); }
+        .cancel-delete-btn { padding: 6px 12px; background: var(--input-bg); border-color: var(--primary-color); color: var(--primary-color); min-width: 70px; height: 28px; }
+        .cancel-delete-btn:hover { background: var(--btn-hover-bg); }
+        .delete-mode .product-checkbox { display: inline-block; }
+        .delete-mode .editable-cell { cursor: default; }
+        .delete-mode .editable-cell:hover { background: none; }
+        .delete-mode .product-name { cursor: pointer; }
+        .delete-mode .product-name:hover { color: var(--danger-color) !important; text-shadow: 0 0 5px var(--danger-color); }
+        .editable-cell { cursor: pointer; position: relative; }
+        .editable-cell:hover { background: var(--input-bg); }
+        tr.viewing .editable-cell.viewing { background-color: var(--view-cell-bg) !important; }
+        .cell-edit-input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; padding: 8px; background: var(--modal-bg); border: 1px solid var(--primary-color); color: #fff; font-size: 0.9em; box-sizing: border-box; z-index: 1000; text-align: center; }
+        .cell-edit-input:focus { outline: none; box-shadow: var(--input-focus-shadow); }
+        .cell-edit-input[type="number"]::-webkit-inner-spin-button, .cell-edit-input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; appearance: none; margin: 0; }
+        .cell-edit-input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+        .batch-dropdown { position: relative; display: inline-block; width: auto; min-width: 70px; }
+        .exchange-rate-btn, .batch-operation-btn { background: var(--input-bg); border: 1px solid var(--primary-color); color: var(--primary-color); padding: 2px 6px; border-radius: 4px; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; gap: 4px; width: 100%; height: 26px; font-size: 0.85em; text-align: center; white-space: nowrap; box-sizing: border-box; }
+        .exchange-rate-btn:hover, .batch-operation-btn:hover { background: var(--input-focus-bg); box-shadow: var(--input-focus-shadow); transform: translateY(-1px); }
+        .batch-dropdown-content { display: none; position: absolute; top: 100%; left: 0; background: var(--modal-bg); min-width: 120px; box-shadow: var(--glow-box); border: 1px solid var(--border-subtle); border-radius: 5px; z-index: 1000; margin-top: 4px; }
+        .batch-dropdown-content.show { display: block; animation: fadeIn 0.2s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .dropdown-section { padding: 2px 0; }
+        .dropdown-header { padding: 4px 10px; color: var(--placeholder-color); font-size: 0.75em; text-transform: uppercase; letter-spacing: 1px; }
+        .dropdown-divider { height: 1px; background: var(--border-subtle); margin: 2px 0; }
+        .danger-button { color: var(--danger-color) !important; }
+        .danger-button:hover { background: var(--danger-bg) !important; }
+        .batch-dropdown-content button, .submenu button { width: 100%; text-align: left; padding: 4px 10px; border: none; background: none; color: var(--primary-color); cursor: pointer; transition: all 0.3s ease; font-size: 0.8em; min-width: unset; height: auto; justify-content: flex-start; }
+        .batch-dropdown-content button:hover, .submenu button:hover { background: var(--input-bg); }
+        .batch-dropdown-content button:not(:last-child) { border-bottom: 1px solid var(--border-subtle); }
+        .submenu { display: none; position: absolute; right: 100%; top: 0; background: var(--modal-bg); min-width: 120px; box-shadow: var(--glow-box); border: 1px solid var(--border-subtle); border-radius: 5px; z-index: 1001; }
+        #fileInput { display: none; }
+        .sortable { cursor: pointer; position: relative; }
+        .sortable:hover { background: var(--input-focus-bg); }
+        .dropdown-item-with-submenu { position: relative; }
+        .dropdown-item-with-submenu:hover .submenu { display: block; animation: fadeIn 0.2s ease; }
+
+        input[type="password"]::-ms-reveal, input[type="password"]::-webkit-credentials-auto-fill-button, input[type="password"]::-webkit-input-decoration, input[type="password"]::-webkit-input-password-toggle-button { display: none !important; }
+        .simplified-view .full-view { display: none; }
+        .simplified-view .right-settings { gap: 6px; }
+        .simplified-view .right-settings .setting-item input { max-width: 60px; }
+        .simplified-view .table-container { max-width: 100%; overflow-x: auto; }
+        .simplified-view th, .simplified-view td { white-space: nowrap; }
+        @media (max-width: 768px) {
+            body { padding: 10px 5px; }
+            .container { padding: 8px; border-radius: 8px; max-width: 100%; margin: 0; }
+            .table-container { max-height: calc(100vh - 220px); overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            table { min-width: 1200px; table-layout: auto; }
+            th { font-size: 0.75em; padding: 6px 3px; white-space: nowrap; }
+            td { font-size: 0.8em; padding: 3px; }
+            th:nth-child(1), td:nth-child(1) { width: 150px; min-width: 150px; }
+            th:nth-child(2), td:nth-child(2) { width: 80px; min-width: 80px; }
+            th:nth-child(3), td:nth-child(3) { width: 80px; min-width: 80px; }
+            th:nth-child(4), td:nth-child(4) { width: 80px; min-width: 80px; }
+            th:nth-child(5), td:nth-child(5) { width: 70px; min-width: 70px; }
+            th:nth-child(6), td:nth-child(6) { width: 70px; min-width: 70px; }
+            th:nth-child(7), td:nth-child(7) { width: 60px; min-width: 60px; }
+            th:nth-child(n+8):nth-child(-n+15), td:nth-child(n+8):nth-child(-n+15) { width: 90px; min-width: 90px; }
+            .action-buttons { flex-direction: column; gap: 6px; padding: 0; }
+            .action-buttons .left-buttons { width: 100%; }
+            .action-buttons .right-settings { width: 100%; justify-content: space-between; }
+            .action-buttons .right-settings .setting-item { flex: 1; }
+            .action-buttons .right-settings .setting-item input { width: 100% !important; min-width: unset !important; max-width: unset !important; }
+            .batch-dropdown { flex: 1; }
+            #viewModeToggle { width: 100%; }
+            .search-box { padding: 0; margin-bottom: 8px; }
+            .search-box input { font-size: 16px; }
+            .pagination { gap: 4px; margin-top: 8px; flex-wrap: wrap; }
+            .pagination button { min-width: 28px; height: 26px; font-size: 0.8em; padding: 2px 6px; }
+            .simplified-view table { min-width: 680px; }
+            .simplified-view th:nth-child(1), .simplified-view td:nth-child(1) { width: 120px; min-width: 120px; }
+            .simplified-view th:nth-child(n+2):nth-child(-n+8), .simplified-view td:nth-child(n+2):nth-child(-n+8) { width: 80px; min-width: 80px; }
+            .simplified-view th:nth-child(2), .simplified-view td:nth-child(2) { width: 70px; min-width: 70px; }
+            .simplified-view th:nth-child(9), .simplified-view td:nth-child(9) { width: 90px; min-width: 90px; }
+            .table-container::-webkit-scrollbar { height: 8px; }
+            .table-container::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+            .table-container::-webkit-scrollbar-thumb { background: rgba(0,255,204,0.5); border-radius: 4px; }
+            .modal-content { width: 95%; max-width: 95%; margin: 10px; padding: 12px; }
+            h1 { font-size: 1.5rem; padding: 0.4rem 0.8rem; letter-spacing: 1px; }
+            .title-container { margin-bottom: 8px; }
+            .batch-dropdown-content { right: 0; left: auto; min-width: 150px; }
+            .submenu { right: auto; left: 100%; top: -5px; }
+            .cell-edit-input { font-size: 16px; padding: 6px; }
+        }
+    </style>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="API KEY/config.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="title-container">
+            <h1 onclick="returnToIndex()">商品銷售總表</h1>
+        </div>
+        
+        <div class="action-buttons">
+            <div class="left-buttons">
+                <button onclick="toggleViewMode()" id="viewModeToggle">完整模式</button>
+            </div>
+            <div class="right-settings full-view">
+                <div class="setting-item"><input type="number" id="globalExchangeRate" step="0.001" min="0" value="" placeholder="採購匯率" title="全域設定：控制所有計算頁面的採購匯率"></div>
+                <div class="setting-item"><input type="number" id="globalInternationalShipping" step="0.001" min="0" value="" placeholder="國際運費" title="全域設定：控制所有計算頁面的國際運費"></div>
+                <div class="setting-item"><input type="number" id="globalPlatformCommission" step="0.001" min="0" value="" placeholder="平台抽成" title="全域設定：控制所有計算頁面的平台抽成"></div>
+                <div class="setting-item">
+                    <button type="button" class="exchange-rate-btn" onclick="window.open('https://rate.bot.com.tw/xrt', '台銀匯率', 'width=600,height=500,scrollbars=yes,resizable=yes')" title="開啟台銀匯率查詢">
+                        台銀匯率
+                    </button>
+                </div>
+                <div class="batch-dropdown">
+                    <button type="button" class="batch-operation-btn" id="batchOperationBtn">
+                        資料處理
+                    </button>
+                    <div class="batch-dropdown-content" id="batchDropdown">
+                        <div class="dropdown-section">
+                            <div class="dropdown-item-with-submenu">
+                                <button type="button">還原備份</button>
+                                <div class="submenu">
+                                    <button type="button" onclick="exportBlankTemplate()">空白範本</button>
+                                    <button type="button" onclick="exportToExcel()">資料匯出</button>
+                                    <button type="button" onclick="openFileInput()">資料匯入</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-item-with-submenu">
+                            <button type="button" class="danger-button">資料清除</button>
+                            <div class="submenu">
+                                <button type="button" onclick="toggleDeleteMode()">選擇刪除</button>
+                                <button type="button" onclick="clearAllData()" class="danger-button">全部刪除</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="搜尋" oninput="searchTable()">
+        </div>
+
+        <div class="select-all-container" style="display: none;" id="deleteOptions">
+            <button onclick="confirmDelete()" class="confirm-delete-btn">汰除</button>
+            <button onclick="cancelDelete()" class="cancel-delete-btn">取消</button>
+        </div>
+
+        <div class="table-container">
+            <table id="productTable">
+                <thead>
+                    <tr>
+                        <th>商品名稱</th>
+                        <th>採購價格</th>
+                        <th>採購數量</th>
+                        <th class="full-view">內地運費</th>
+                        <th class="full-view">單重</th>
+                        <th class="full-view">總重</th>
+                        <th class="full-view">計材</th>
+                        <th>單價成本</th>
+                        <th>採購總成本</th>
+                        <th>建議定價</th>
+                        <th>實際定價</th>
+                        <th>定價損益</th>
+                        <th>定價總損益</th>
+                        <th>定價毛利率</th>
+                        <th>定價報酬率</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+
+        <div class="pagination" id="pagination"></div>
+    </div>
+
+    <div class="modal" id="errorModal">
+        <div class="modal-content">
+            <div class="modal-header">
+            </div>
+            <div class="modal-body" id="errorModalBody"></div>
+            <div class="modal-footer">
+                <button class="confirm" onclick="closeModal('errorModal')">確定</button>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="infoModal">
+        <div class="modal-content modal-content-info">
+            <div class="modal-header"></div>
+            <div class="modal-body" id="infoModalBody">資料匯入完成</div>
+            <div class="modal-footer">
+                <button class="confirm btn-info" onclick="closeModal('infoModal')">知道了</button>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="passwordModal">
+        <div class="modal-content">
+            <div class="modal-header">
+            </div>
+            <div class="modal-body">
+                <input type="password" id="passwordInput" class="password-input" maxlength="4" autocomplete="new-password">
+            </div>
+            <div class="modal-footer">
+                <button class="confirm" onclick="verifyPassword()">是的</button>
+                <button class="cancel" onclick="closeModal('passwordModal')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="finalDeleteConfirmModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title-danger">⚠️ 最終確認 ⚠️</h3>
+            </div>
+            <div class="modal-body"></div>
+            <div class="modal-footer">
+                <button class="confirm" onclick="executeDeleteAll()">是的</button>
+                <button class="cancel" onclick="closeFinalDeleteConfirmModal()">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="fileInput" accept=".xlsx,.xls" onchange="importFromExcel(event)">
+
+    <script>
+        const firebaseConfig = {
+            apiKey: (window.__FIREBASE_API_KEY__ || "").trim() || undefined,
+            authDomain: "computer-168.firebaseapp.com",
+            projectId: "computer-168",
+            storageBucket: "computer-168.firebasestorage.app",
+            messagingSenderId: "1008079543770",
+            appId: "1:1008079543770:web:c45802292e9684357ab4e3",
+            measurementId: "G-Z0SYWETVV9"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        let products = [];
+        const itemsPerPage = 50;
+        let currentPage = 1;
+        const $ = (id) => document.getElementById(id);
+        const $$ = (sel) => document.querySelector(sel);
+
+        const SETTING_DOC_IDS = { exchangeRate: '採購匯率', internationalShipping: '國際運費', platformCommission: '平台抽成' };
+        let settings = {
+            exchangeRate: undefined,
+            internationalShipping: undefined,
+            platformCommission: undefined
+        };
+
+        const formatNumber = (value, isInteger = false, defaultEmpty = '') => {
+            if (value === '' || value === undefined || value === null) return defaultEmpty;
+            const num = parseFloat(value);
+            if (isNaN(num)) return defaultEmpty;
+            if (isInteger) return Math.round(num).toString();
+            if (num % 1 === 0) return num.toString();
+            return num.toFixed(2).replace(/\.?0+$/, '');
+        };
+        const formatDecimal = (value) => formatNumber(value, false, '0');
+        const formatWeight = (value) => {
+            const num = parseFloat(value);
+            if (isNaN(num) || num === 0) return '0';
+            const formatted = num.toFixed(2);
+            return formatted.endsWith('.00') ? Math.round(num).toString() : formatted.replace(/0+$/, '').replace(/\.$/, '');
+        };
+        const parseNum = (v, d = 0) => parseFloat(v) || d;
+        const parseIntVal = (v, d = 0) => parseInt(v) || d;
+        function handleError(err, msg) { alert(msg); }
+        const DECIMAL_FIELDS = ['purchasePrice', 'singleWeight', 'totalWeight', 'inlandShipping', 'internationalShipping', 'exchangeRate', 'platformCommission', 'singleCost', 'totalCost', 'suggestedPrice', 'actualPrice', 'profitLoss'];
+        const INTEGER_FIELDS = ['quantity', 'materialCount'];
+        function calcRates(profitLoss, revenue, singleCost) {
+            return {
+                profitLossRate: (revenue > 0 ? (profitLoss / revenue) * 100 : 0).toFixed(2),
+                returnRate: (singleCost > 0 ? (profitLoss / singleCost) * 100 : 0).toFixed(2)
+            };
+        }
+
+        let isFullView = false;
+        let currentSort = { column: null, direction: 'asc' };
+        let selectedItem = null;
+        let highlightTimer = null;
+        function clearHighlight() {
+            if (highlightTimer) {
+                clearTimeout(highlightTimer);
+                highlightTimer = null;
+            }
+            if (!selectedItem) return;
+            
+            if (selectedItem.type === 'product') {
+                const row = $$(`tr:has(.product-name[data-index="${selectedItem.index}"])`);
+                const name = $$(`.product-name[data-index="${selectedItem.index}"]`);
+                if (row) row.classList.remove('viewing');
+                if (name) name.classList.remove('viewing');
+            } else if (selectedItem.type === 'cell') {
+                const cell = $$(`.editable-cell[data-index="${selectedItem.index}"][data-field="${selectedItem.field}"]`);
+                if (cell) {
+                    cell.classList.remove('viewing');
+                    const row = cell.closest('tr');
+                    if (row) row.classList.remove('viewing');
+                }
+            }
+        }
+        function clearSelection() { clearHighlight(); selectedItem = null; }
+        function updateTableHeaders() {
+            const simpleFields = ['name','purchasePrice', 'quantity', 'singleCost', 'totalCost', 'suggestedPrice', 'actualPrice', 'profitLoss', 'totalProfitLoss'];
+            const headers = [
+                { field: 'name', text: '商品名稱' },
+                { field: 'purchasePrice', text: '採購價格' },
+                { field: 'quantity', text: '採購數量' },
+                { field: 'inlandShipping', text: '內地運費' },
+                { field: 'singleWeight', text: '單重' },
+                { field: 'totalWeight', text: '總重' },
+                { field: 'materialCount', text: '計材' },
+                { field: 'singleCost', text: '單價成本' },
+                { field: 'totalCost', text: '採購總成本' },
+                { field: 'suggestedPrice', text: '建議定價' },
+                { field: 'actualPrice', text: '實際定價' },
+                { field: 'profitLoss', text: '定價損益' },
+                { field: 'totalProfitLoss', text: '定價總損益' },
+                { field: 'profitLossRate', text: '定價毛利率' },
+                { field: 'returnRate', text: '定價報酬率' }
+            ];
+            const thead = $$('#productTable thead tr');
+            if (!thead) return;
+            thead.innerHTML = headers.map(header => `
+                <th class="sortable${simpleFields.includes(header.field) ? '' : ' full-view'}" data-field="${header.field}">
+                    ${header.text}
+                </th>
+            `).join('');
+            document.querySelectorAll('.sortable').forEach(th => th.addEventListener('click', () => sortTable(th.dataset.field)));
+        }
+        function sortComparator(a, b, field, direction) {
+            const isName = field === 'name';
+            const vA = isName ? a[field] : (parseFloat(a[field]) || 0);
+            const vB = isName ? b[field] : (parseFloat(b[field]) || 0);
+            return isName ? (direction === 'asc' ? vA.localeCompare(vB) : vB.localeCompare(vA)) : (direction === 'asc' ? vA - vB : vB - vA);
+        }
+        function sortTable(field) {
+            currentSort.direction = (currentSort.column === field && currentSort.direction === 'asc') ? 'desc' : 'asc';
+            currentSort.column = field;
+            document.querySelectorAll('.sortable').forEach(th => { th.classList.remove('asc', 'desc'); if (th.dataset.field === field) th.classList.add(currentSort.direction); });
+            initCachedElements();
+            const searchText = cachedElements.searchInput ? cachedElements.searchInput.value.trim() : '';
+            if (searchText) searchTable();
+            else { products.sort((a, b) => sortComparator(a, b, field, currentSort.direction)); initTable(); }
+        }
+
+        let dataCache = {
+            settings: null,
+            products: null,
+            lastFetch: 0
+        };
+        
+        const CACHE_DURATION = 5 * 60 * 1000;
+        function applySettingsToUI(s) {
+            const el = (id) => $(id);
+            if (s.exchangeRate !== undefined && el('globalExchangeRate')) el('globalExchangeRate').value = s.exchangeRate;
+            if (s.internationalShipping !== undefined && el('globalInternationalShipping')) el('globalInternationalShipping').value = s.internationalShipping;
+            if (s.platformCommission !== undefined && el('globalPlatformCommission')) el('globalPlatformCommission').value = s.platformCommission;
+        }
+
+        async function loadData(forceRefresh = false) {
+            try {
+                const now = Date.now();
+                initCachedElements();
+                if (cachedElements.viewModeToggle && cachedElements.tableContainer) {
+                    cachedElements.viewModeToggle.textContent = isFullView ? '簡易模式' : '完整模式';
+                    cachedElements.tableContainer.classList.toggle('simplified-view', !isFullView);
+                }
+                if (!forceRefresh && dataCache.settings && dataCache.products && (now - dataCache.lastFetch) < CACHE_DURATION) {
+                    settings = dataCache.settings;
+                    products = dataCache.products;
+                    applySettingsToUI(settings);
+                    initTable();
+                    return;
+                }
+                const settingRefs = Object.keys(SETTING_DOC_IDS).map(key =>
+                    db.collection('設定').doc(SETTING_DOC_IDS[key]).get()
+                );
+                const [exchangeRateDoc, internationalShippingDoc, platformCommissionDoc, productsSnapshot] = await Promise.all([
+                    ...settingRefs,
+                    db.collection('總表').orderBy('timestamp', 'desc').limit(1000).get()
+                ]);
+                const settingDocs = [exchangeRateDoc, internationalShippingDoc, platformCommissionDoc];
+                const allExist = settingDocs.every(d => d.exists);
+                if (allExist) {
+                    settings.exchangeRate = settingDocs[0].data()?.value;
+                    settings.internationalShipping = settingDocs[1].data()?.value;
+                    settings.platformCommission = settingDocs[2].data()?.value;
+                    dataCache.settings = settings;
+                    applySettingsToUI(settings);
+                    try { await db.collection('設定').doc('global').delete(); } catch (e) { /* 若已不存在或權限不足則忽略 */ }
+                } else {
+                    const globalDoc = await db.collection('設定').doc('global').get();
+                    if (globalDoc.exists) {
+                        const legacy = globalDoc.data();
+                        settings.exchangeRate = legacy.exchangeRate;
+                        settings.internationalShipping = legacy.internationalShipping;
+                        settings.platformCommission = legacy.platformCommission;
+                        dataCache.settings = settings;
+                        applySettingsToUI(settings);
+                        await writeSettingsToDocs(undefined, settings);
+                        await db.collection('設定').doc('global').delete();
+                    }
+                }
+
+                products = productsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                products.forEach(p => recalculateProduct(p));
+                dataCache.products = products;
+                dataCache.lastFetch = now;
+                const updatedData = localStorage.getItem('updatedProductData');
+                if (updatedData) {
+                    try {
+                        const updatedProduct = JSON.parse(updatedData);
+                        const index = products.findIndex(p => p.id === updatedProduct.id);
+                        if (index !== -1) {
+                            products[index] = { ...products[index], ...updatedProduct };
+                            await db.collection('總表').doc(updatedProduct.id).update(updatedProduct);
+                        }
+                        localStorage.removeItem('updatedProductData');
+                    } catch (error) {
+                    }
+                }
+                
+                initTable();
+            } catch (e) { handleError(e, "載入數據時發生錯誤"); }
+        }
+
+        async function writeSettingsToDocs(previousSettings, newSettings) {
+            const Timestamp = firebase.firestore.FieldValue.serverTimestamp();
+            const keys = ['exchangeRate', 'internationalShipping', 'platformCommission'];
+            for (const key of keys) {
+                const docId = SETTING_DOC_IDS[key];
+                const ref = db.collection('設定').doc(docId);
+                const newVal = newSettings[key];
+                await ref.set({ value: newVal ?? null, updatedAt: Timestamp });
+            }
+        }
+
+        async function updateSettings() {
+            try {
+                const read = id => { const el = $(id); return !el ? undefined : (el.value === '' ? undefined : parseFloat(el.value)); };
+                const newV = { exchangeRate: read('globalExchangeRate'), internationalShipping: read('globalInternationalShipping'), platformCommission: read('globalPlatformCommission') };
+                if (settings.exchangeRate === newV.exchangeRate && settings.internationalShipping === newV.internationalShipping && settings.platformCommission === newV.platformCommission) return;
+                const previousSettings = { ...settings };
+                settings = { ...settings, ...newV };
+                await writeSettingsToDocs(previousSettings, settings);
+                if (window.opener && !window.opener.closed) window.opener.postMessage({ type: 'updateSettings', settings }, '*');
+                products.forEach(p => recalculateProduct(p));
+                refreshTableWithSearchState();
+            } catch (e) { handleError(e, "更新設定時發生錯誤"); }
+        }
+
+        async function recalculateAllProducts() {
+            try {
+                const batch = db.batch();
+                
+                for (const product of products) {
+                    let updatedData = {};
+                    
+                    if (product.currency === 'CNY') {
+                        const totalProductCost = parseNum(product.purchasePrice) * parseNum(product.quantity);
+                        const costAfterExchange = (totalProductCost + parseNum(product.inlandShipping)) * settings.exchangeRate;
+                        const intlShip = parseNum(product.internationalShipping) || settings.internationalShipping || 0;
+                        const mat = parseIntVal(product.materialCount);
+                        const internationalShippingTotal = (parseNum(product.totalWeight) * intlShip) + (mat > 6 ? (mat - 6) * 25 : 0);
+                        const totalCost = costAfterExchange + internationalShippingTotal;
+                        const singleCost = totalCost / parseNum(product.quantity);
+
+                        const suggestedPrice = singleCost / (1 - settings.platformCommission / 100);
+                        const actualPrice = parseNum(product.actualPrice);
+                        const priceForCalc = actualPrice > 0 ? actualPrice : suggestedPrice;
+                        const platformRate = 1 - settings.platformCommission / 100;
+                        const profitLoss = (priceForCalc * platformRate) - singleCost;
+                        const revenue = priceForCalc * platformRate;
+                        const rates = calcRates(profitLoss, revenue, singleCost);
+                        updatedData = {
+                            exchangeRate: settings.exchangeRate,
+                            platformCommission: settings.platformCommission,
+                            internationalShipping: intlShip,
+                            singleCost: singleCost.toFixed(2),
+                            totalCost: totalCost.toFixed(2),
+                            suggestedPrice: suggestedPrice.toFixed(2),
+                            profitLoss: Math.round(profitLoss).toString(),
+                            profitLossRate: rates.profitLossRate,
+                            returnRate: rates.returnRate
+                        };
+                    } else {
+                        const singleCost = parseNum(product.singleCost);
+                        const suggestedPrice = singleCost / (1 - settings.platformCommission / 100);
+                        const actualPrice = parseNum(product.actualPrice);
+                        const priceForCalc = actualPrice > 0 ? actualPrice : suggestedPrice;
+                        const platformRate = 1 - settings.platformCommission / 100;
+                        const profitLoss = (priceForCalc * platformRate) - singleCost;
+                        const revenue = priceForCalc * platformRate;
+                        const rates = calcRates(profitLoss, revenue, singleCost);
+                        updatedData = {
+                            platformCommission: settings.platformCommission,
+                            suggestedPrice: suggestedPrice.toFixed(2),
+                            profitLoss: Math.round(profitLoss).toString(),
+                            profitLossRate: rates.profitLossRate,
+                            returnRate: rates.returnRate
+                        };
+                    }
+
+                    Object.assign(product, updatedData);
+                    batch.update(db.collection('總表').doc(product.id), updatedData);
+                }
+
+                await batch.commit();
+                refreshTableWithSearchState();
+            } catch (e) { handleError(e, "重新計算商品數據時發生錯誤"); }
+        }
+        window.addEventListener('message', async function(event) {
+            try {
+                if (event.data.type === 'updateSettings') {
+                    const newSettings = event.data.settings;
+                    if (newSettings) {
+                        settings = newSettings;
+                        applySettingsToUI(newSettings);
+                        await writeSettingsToDocs(settings, newSettings);
+                        await recalculateAllProducts();
+                    }
+                }
+                else if (event.data.type === 'newProduct') {
+                    if (!event.data.product.name || !event.data.product.name.trim()) event.data.product.name = `未命名商品_${Date.now()}`;
+                    let originalName = event.data.product.name;
+                    let safeId = createSafeId(originalName);
+                    const existingProduct = products.find(p => p.id === safeId);
+                    if (existingProduct) {
+                        event.data.product.name = `${originalName}_${Date.now()}`;
+                        safeId = createSafeId(event.data.product.name);
+                    }
+                    const productWithId = { id: safeId, ...event.data.product, timestamp: firebase.firestore.FieldValue.serverTimestamp() };
+                    await db.collection('總表').doc(safeId).set(productWithId);
+                    const newProduct = {
+                        id: safeId,
+                        ...event.data.product
+                    };
+                    products.unshift(newProduct);
+                    currentPage = 1;
+                    refreshTableWithSearchState();
+                }
+                else if (event.data.type === 'updateProduct') {
+                    const index = event.data.index;
+                    if (index >= 0 && index < products.length) {
+                        const product = products[index];
+                        await db.collection('總表').doc(product.id).update(event.data.product);
+                        products[index] = { ...product, ...event.data.product };
+                        refreshTableWithSearchState();
+                    }
+                }
+                else if (event.data.type === 'calculationComplete') {
+                    const updatedProduct = event.data.product;
+                    const index = event.data.index;
+                    if (index >= 0 && index < products.length) {
+                        const product = products[index];
+                        const p = updatedProduct;
+                        const formattedProduct = {
+                            ...updatedProduct,
+                            purchasePrice: parseNum(p.purchasePrice),
+                            quantity: parseIntVal(p.quantity),
+                            singleWeight: parseNum(p.singleWeight),
+                            totalWeight: parseNum(p.totalWeight),
+                            materialCount: parseIntVal(p.materialCount),
+                            inlandShipping: parseNum(p.inlandShipping),
+                            internationalShipping: parseNum(p.internationalShipping),
+                            exchangeRate: parseNum(p.exchangeRate, settings.exchangeRate),
+                            platformCommission: parseNum(p.platformCommission, settings.platformCommission),
+                            singleCost: parseNum(p.singleCost),
+                            totalCost: parseNum(p.totalCost),
+                            suggestedPrice: parseNum(p.suggestedPrice),
+                            actualPrice: parseNum(p.actualPrice),
+                            profitLoss: parseNum(p.profitLoss)
+                        };
+                        Object.assign(product, formattedProduct);
+                        recalculateProduct(product);
+                        await db.collection('總表').doc(product.id).update(formattedProduct);
+                        refreshTableWithSearchState();
+                    }
+                }
+                else if (event.data.type === 'updateProductName') {
+                    const productId = event.data.productId;
+                    const newName = event.data.newName;
+                    const product = products.find(p => p.id === productId);
+                    if (product) {
+                        product.name = newName;
+                        refreshTableWithSearchState();
+                    }
+                }
+                else if (event.data.type === 'updateProductId') {
+                    const oldId = event.data.oldId;
+                    const newId = event.data.newId;
+                    const updatedProduct = event.data.product;
+                    
+                    const productIndex = products.findIndex(p => p.id === oldId);
+                    if (productIndex !== -1) {
+                        products[productIndex] = { ...products[productIndex], ...updatedProduct, id: newId };
+                        refreshTableWithSearchState();
+                    }
+                }
+                else if (event.data.type === 'addNewProduct') {
+                    const newProduct = event.data.product;
+                    products.unshift(newProduct);
+                    currentPage = 1;
+                    refreshTableWithSearchState();
+                }
+            } catch (e) { handleError(e, "處理消息時發生錯誤"); }
+        });
+
+        function debounce(func, wait) {
+            let timeout;
+            return (...args) => {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func(...args), wait);
+            };
+        }
+
+        window.addEventListener('load', async function() {
+            try {
+                const params = new URLSearchParams(window.location.search);
+                if (params.has('returnData')) {
+                    const returnData = JSON.parse(decodeURIComponent(params.get('returnData')));
+                    if (returnData && returnData.index >= 0) {
+                        const product = products[returnData.index];
+                        if (product && product.id) {
+                            const p = returnData.product;
+                            const updatedProduct = {
+                                ...p,
+                                purchasePrice: parseNum(p.purchasePrice),
+                                quantity: parseIntVal(p.quantity),
+                                singleWeight: parseNum(p.singleWeight),
+                                totalWeight: parseNum(p.totalWeight),
+                                materialCount: parseIntVal(p.materialCount),
+                                inlandShipping: parseNum(p.inlandShipping),
+                                internationalShipping: parseNum(p.internationalShipping),
+                                exchangeRate: parseNum(p.exchangeRate, settings.exchangeRate),
+                                platformCommission: parseNum(p.platformCommission, settings.platformCommission),
+                                singleCost: parseNum(p.singleCost),
+                                totalCost: parseNum(p.totalCost),
+                                suggestedPrice: parseNum(p.suggestedPrice),
+                                actualPrice: parseNum(p.actualPrice),
+                                profitLoss: parseNum(p.profitLoss)
+                            };
+
+                            await db.collection('總表').doc(product.id).update(updatedProduct);
+                            products[returnData.index] = { ...product, ...updatedProduct };
+                            recalculateProduct(products[returnData.index]);
+                            refreshTableWithSearchState();
+                        }
+                    }
+                }
+            } catch (e) { handleError(e, "處理返回數據時發生錯誤"); }
+            await loadData();
+        });
+        function recalculateProduct(product) {
+            try {
+                if (!product) {
+                    return;
+                }
+
+                const quantity = parseNum(product.quantity);
+                const singleWeight = parseNum(product.singleWeight);
+                const totalWeight = parseNum(product.totalWeight);
+                const purchasePrice = parseNum(product.purchasePrice);
+                const inlandShipping = parseNum(product.inlandShipping);
+                const materialCount = parseIntVal(product.materialCount);
+                const exchangeRate = settings.exchangeRate || 0;
+                const platformCommission = settings.platformCommission || 0;
+                const internationalShipping = settings.internationalShipping || 0;
+                const actualPrice = parseFloat(product.actualPrice) || 0;
+
+                if (exchangeRate === 0 && product.currency === 'CNY') {
+                    return product;
+                }
+
+                if (quantity > 0 && singleWeight > 0) {
+                    product.totalWeight = (singleWeight * quantity).toFixed(6);
+                } else {
+                    product.totalWeight = '0';
+                }
+
+                let singleCost = 0;
+                let totalCost = 0;
+
+                if (product.currency === 'CNY') {
+                    const totalProductCost = purchasePrice * quantity;
+                    const costAfterExchange = (totalProductCost + inlandShipping) * exchangeRate;
+                    const internationalShippingTotal = (parseFloat(product.totalWeight) * internationalShipping) + (materialCount > 6 ? (materialCount - 6) * 25 : 0);
+                    totalCost = costAfterExchange + internationalShippingTotal;
+                    singleCost = quantity > 0 ? totalCost / quantity : 0;
+                    product.singleCost = singleCost.toFixed(2);
+                    product.totalCost = totalCost.toFixed(2);
+                } else {
+                    singleCost = parseNum(product.singleCost);
+                    totalCost = parseNum(product.totalCost);
+                }
+
+                // 計算建議定價和損益
+                const platformRate = 1 - (platformCommission / 100);
+                const suggestedPrice = singleCost / platformRate;
+                product.suggestedPrice = suggestedPrice.toFixed(2);
+
+                // 如果實際定價為 0 或未輸入，使用建議定價進行計算
+                const priceForCalculation = actualPrice > 0 ? actualPrice : suggestedPrice;
+
+                // 計算定價損益
+                const profitLoss = (priceForCalculation * platformRate) - singleCost;
+                product.profitLoss = Math.round(profitLoss).toString(); // 定價損益四捨五入到整數
+
+                const totalProfitLoss = profitLoss * parseIntVal(product.quantity);
+                product.totalProfitLoss = Math.round(totalProfitLoss).toString();
+
+                const revenue = priceForCalculation * platformRate;
+                const rates = calcRates(profitLoss, revenue, singleCost);
+                product.profitLossRate = rates.profitLossRate;
+                product.returnRate = rates.returnRate;
+
+                return product;
+            } catch (e) { handleError(e, "重新計算商品數據時發生錯誤"); return product; }
+        }
+
+        function createSafeId(productName) {
+            let safeId = productName.trim()
+                .replace(/[\/\\\[\]{}()*+?.,^$|#\s]/g, '_')
+                .replace(/_+/g, '_')
+                .replace(/^_+|_+$/g, '');
+            if (!safeId) return `product_${Date.now()}`;
+            return safeId.length > 100 ? safeId.substring(0, 100) : safeId;
+        }
+
+        function returnToIndex() {
+            window.location.href = 'Calculator.html';
+        }
+
+        function handleProductNameClick(index) {
+            initCachedElements();
+            const tableContainer = cachedElements.tableContainer;
+            if (tableContainer && tableContainer.classList.contains('delete-mode')) {
+                const productName = $$(`.product-name[data-index="${index}"]`);
+                const checkbox = $$(`.product-checkbox[data-index="${index}"]`);
+                
+                if (productName && checkbox) {
+                    checkbox.checked = !checkbox.checked;
+                    productName.classList.toggle('selected');
+                    productName.style.color = '';
+                }
+            } else {
+                const product = products[index];
+                if (!product) {
+                    return;
+                }
+
+                if (selectedItem !== null) clearHighlight();
+
+                const isSelected = selectedItem && selectedItem.type === 'product' && selectedItem.index === index;
+                
+                if (isSelected) {
+                    clearSelection();
+                    const row = $$(`tr:has(.product-name[data-index="${index}"])`);
+                    const name = $$(`.product-name[data-index="${index}"]`);
+                    if (row) row.classList.remove('viewing');
+                    if (name) name.classList.remove('viewing');
+
+                    const formattedProduct = {
+                        id: product.id,
+                        name: product.name || '',
+                        currency: product.currency || 'CNY',
+                        purchasePrice: parseNum(product.purchasePrice),
+                        quantity: parseIntVal(product.quantity),
+                        singleWeight: parseNum(product.singleWeight),
+                        totalWeight: parseNum(product.totalWeight),
+                        materialCount: parseIntVal(product.materialCount),
+                        inlandShipping: parseNum(product.inlandShipping) === 0 ? '無' : parseNum(product.inlandShipping),
+                        internationalShipping: parseNum(product.internationalShipping),
+                        exchangeRate: parseNum(product.exchangeRate, settings.exchangeRate),
+                        platformCommission: parseNum(product.platformCommission, settings.platformCommission),
+                        singleCost: parseNum(product.singleCost),
+                        totalCost: parseNum(product.totalCost),
+                        suggestedPrice: parseNum(product.suggestedPrice),
+                        actualPrice: parseNum(product.actualPrice),
+                        profitLoss: parseNum(product.profitLoss),
+                        timestamp: product.timestamp,
+                        isEditMode: true
+                    };
+
+                    const params = new URLSearchParams({
+                        mode: 'edit',
+                        id: index,
+                        data: JSON.stringify(formattedProduct)
+                    });
+                    window.location.href = `Calculator.html?${params.toString()}`;
+                } else {
+                    selectedItem = { type: 'product', index: index };
+                    clearHighlight();
+                    const name = $$(`.product-name[data-index="${index}"]`);
+                    if (name) {
+                        const row = name.closest('tr');
+                        if (row) row.classList.add('viewing');
+                        name.classList.add('viewing');
+                    }
+                    highlightTimer = setTimeout(() => {
+                        clearSelection();
+                        const row = $$(`tr:has(.product-name[data-index="${index}"])`);
+                        const nameEl = $$(`.product-name[data-index="${index}"]`);
+                        if (row) row.classList.remove('viewing');
+                        if (nameEl) nameEl.classList.remove('viewing');
+                    }, 5000);
+                }
+            }
+        }
+
+        function toggleDeleteMode() {
+            const deleteOptions = $('deleteOptions');
+            initCachedElements();
+            const tableContainer = cachedElements.tableContainer;
+            
+            if (!deleteOptions) {
+                return;
+            }
+            
+            if (deleteOptions.style.display === 'none' || deleteOptions.style.display === '') {
+                deleteOptions.style.display = 'flex';
+                if (tableContainer) {
+                    tableContainer.classList.add('delete-mode');
+                }
+            } else cancelDelete();
+        }
+        function cancelDelete() {
+            const deleteOptions = $('deleteOptions');
+            initCachedElements();
+            const tableContainer = cachedElements.tableContainer;
+            if (deleteOptions) deleteOptions.style.display = 'none';
+            if (tableContainer) tableContainer.classList.remove('delete-mode');
+            document.querySelectorAll('.product-checkbox').forEach(cb => { cb.checked = false; });
+            document.querySelectorAll('.product-name.selected').forEach(n => { n.classList.remove('selected'); n.style.color = ''; });
+            document.querySelectorAll('tr.viewing').forEach(r => r.classList.remove('viewing'));
+            document.querySelectorAll('.product-name.viewing').forEach(n => n.classList.remove('viewing'));
+            document.querySelectorAll('.editable-cell.viewing').forEach(c => c.classList.remove('viewing'));
+            selectedItem = null;
+            if (highlightTimer) { clearTimeout(highlightTimer); highlightTimer = null; }
+            refreshTableWithSearchState();
+        }
+
+        function toggleViewMode() {
+            initCachedElements();
+            isFullView = !isFullView;
+            cachedElements.viewModeToggle.textContent = isFullView ? '簡易模式' : '完整模式';
+            if (isFullView) {
+                cachedElements.tableContainer.classList.remove('simplified-view');
+            } else {
+                cachedElements.tableContainer.classList.add('simplified-view');
+            }
+            updateTableHeaders();
+            refreshTableWithSearchState();
+        }
+
+        function openFileInput() { const el = $('fileInput'); if (el) el.click(); }
+        let cachedElements = {
+            tbody: null,
+            pagination: null,
+            searchInput: null,
+            viewModeToggle: null,
+            tableContainer: null
+        };
+        
+        function initCachedElements() {
+            if (!cachedElements.tbody) {
+                cachedElements.tbody = $('tableBody');
+                cachedElements.pagination = $('pagination');
+                cachedElements.searchInput = $('searchInput');
+                cachedElements.viewModeToggle = $('viewModeToggle');
+                cachedElements.tableContainer = $$('.table-container');
+            }
+        }
+
+        function refreshTable() {
+            initCachedElements();
+            (cachedElements.searchInput && cachedElements.searchInput.value.trim()) ? searchTable() : initTable();
+        }
+
+        async function persistProductAndRefresh(product) {
+            const updateData = { ...product };
+            delete updateData.totalWeight;
+            product.timestamp = updateData.timestamp = firebase.firestore.FieldValue.serverTimestamp();
+            await db.collection('總表').doc(product.id).update(updateData);
+            const idx = products.indexOf(product);
+            if (idx > 0) {
+                products.splice(idx, 1);
+                products.unshift(product);
+            }
+            currentSort = { column: null, direction: 'asc' };
+            refreshTable();
+        }
+
+        function formatProductData(product) {
+            const profitLoss = parseFloat(product.profitLoss) || 0;
+            const inlandShippingValue = parseFloat(product.inlandShipping) || 0;
+            const materialCount = parseInt(product.materialCount) || 0;
+            const actualPriceValue = parseFloat(product.actualPrice) || 0;
+            return {
+                profitLoss,
+                profitLossColor: profitLoss < 0 ? '#ff3366' : '#00ffcc',
+                inlandShipping: inlandShippingValue === 0 ? '無' : formatDecimal(product.inlandShipping),
+                materialCount: materialCount <= 6 ? '無' : materialCount.toString(),
+                actualPrice: actualPriceValue === 0 ? formatNumber(product.suggestedPrice || 0) : formatNumber(product.actualPrice),
+                actualPriceIsEmpty: actualPriceValue === 0
+            };
+        }
+
+        function createTableRowElement(product, index, start, opts) {
+            const dataIndex = opts && opts.dataIndex !== undefined ? opts.dataIndex : start + index;
+            const nameDisplay = (opts && opts.nameHtml) ? opts.nameHtml : (product.name || '未命名商品');
+            const row = document.createElement('tr');
+            const formatted = formatProductData(product);
+            const isSelected = selectedItem && selectedItem.type === 'product' && selectedItem.index === dataIndex;
+            row.innerHTML = `
+                <td>
+                    <input type="checkbox" class="product-checkbox" data-index="${dataIndex}" style="display: none;">
+                    <span class="product-name${isSelected ? ' viewing' : ''}" data-index="${dataIndex}" onclick="handleProductNameClick(${dataIndex})" style="cursor: pointer; color: var(--primary-color);">
+                        ${nameDisplay}
+                    </span>
+                </td>
+                <td class="editable-cell" data-field="purchasePrice" data-index="${dataIndex}">${formatDecimal(product.purchasePrice)}</td>
+                <td class="editable-cell" data-field="quantity" data-index="${dataIndex}">${formatNumber(product.quantity, true)}</td>
+                <td class="editable-cell full-view" data-field="inlandShipping" data-index="${dataIndex}">${formatted.inlandShipping}</td>
+                <td class="editable-cell full-view" data-field="singleWeight" data-index="${dataIndex}">${formatWeight(product.singleWeight)}</td>
+                <td class="non-editable-cell full-view" data-field="totalWeight" data-index="${dataIndex}">${formatWeight(product.totalWeight)}</td>
+                <td class="editable-cell full-view" data-field="materialCount" data-index="${dataIndex}">${formatted.materialCount}</td>
+                <td class="non-editable-cell" data-field="singleCost" data-index="${dataIndex}">${formatNumber(product.singleCost)}</td>
+                <td class="non-editable-cell" data-field="totalCost" data-index="${dataIndex}">${formatNumber(product.totalCost)}</td>
+                <td class="non-editable-cell" data-field="suggestedPrice" data-index="${dataIndex}">${formatNumber(product.suggestedPrice)}</td>
+                <td class="editable-cell" data-field="actualPrice" data-index="${dataIndex}" style="${formatted.actualPriceIsEmpty ? 'color: #888;' : ''}">${formatted.actualPrice}</td>
+                <td class="non-editable-cell" data-field="profitLoss" data-index="${dataIndex}" style="color: ${formatted.profitLossColor}">${formatNumber(product.profitLoss)}</td>
+                <td class="non-editable-cell" data-field="totalProfitLoss" data-index="${dataIndex}" style="color: ${formatted.profitLossColor}">${formatNumber(product.totalProfitLoss || 0)}</td>
+                <td class="non-editable-cell full-view" data-field="profitLossRate" data-index="${dataIndex}" style="color: ${formatted.profitLossColor}">${(parseFloat(product.profitLossRate) || 0).toFixed(2) + '%'}</td>
+                <td class="non-editable-cell full-view" data-field="returnRate" data-index="${dataIndex}" style="color: ${formatted.profitLossColor}">${(parseFloat(product.returnRate) || 0).toFixed(2) + '%'}</td>
+            `;
+            if (selectedItem) {
+                if (selectedItem.type === 'product' && selectedItem.index === dataIndex) {
+                    row.classList.add('viewing');
+                    const nameEl = row.querySelector(`.product-name[data-index="${dataIndex}"]`);
+                    if (nameEl) nameEl.classList.add('viewing');
+                } else if (selectedItem.type === 'cell' && selectedItem.index === dataIndex) {
+                    const cellEl = row.querySelector(`.editable-cell[data-field="${selectedItem.field}"]`);
+                    if (cellEl) { cellEl.classList.add('viewing'); row.classList.add('viewing'); }
+                }
+            }
+            return row;
+        }
+
+        function initTable() {
+            initCachedElements();
+            if (cachedElements.viewModeToggle && cachedElements.tableContainer) {
+                cachedElements.viewModeToggle.textContent = isFullView ? '簡易模式' : '完整模式';
+                if (isFullView) {
+                    cachedElements.tableContainer.classList.remove('simplified-view');
+                } else {
+                    cachedElements.tableContainer.classList.add('simplified-view');
+                }
+            }
+            const tbody = cachedElements.tbody;
+            if (!tbody) {
+                return;
+            }
+            
+            const fragment = document.createDocumentFragment();
+            const start = (currentPage - 1) * itemsPerPage;
+            const paginatedProducts = products.slice(start, start + itemsPerPage);
+            paginatedProducts.forEach((p, i) => fragment.appendChild(createTableRowElement(p, i, start)));
+            tbody.innerHTML = '';
+            tbody.appendChild(fragment);
+            if (currentSort.column) {
+                const th = $$(`.sortable[data-field="${currentSort.column}"]`);
+                if (th) {
+                    th.classList.add(currentSort.direction);
+                }
+            }
+
+            updatePaginationBar();
+            initDelegatedEvents();
+        }
+
+        function updatePaginationBar(totalItems, onPageChange) {
+            initCachedElements();
+            if (!cachedElements.pagination) return;
+            const total = totalItems !== undefined ? totalItems : products.length;
+            const totalPages = Math.ceil(total / itemsPerPage);
+            const refresh = onPageChange || initTable;
+            cachedElements.pagination.innerHTML = '';
+            if (currentPage > 1) {
+                const prevBtn = document.createElement('button');
+                prevBtn.textContent = '<';
+                prevBtn.onclick = () => { currentPage--; refresh(); };
+                cachedElements.pagination.appendChild(prevBtn);
+            }
+            for (let i = 1; i <= totalPages; i++) {
+                const btn = document.createElement('button');
+                btn.textContent = i;
+                if (i === currentPage) btn.classList.add('active');
+                btn.onclick = () => { currentPage = i; refresh(); };
+                cachedElements.pagination.appendChild(btn);
+            }
+            if (currentPage < totalPages) {
+                const nextBtn = document.createElement('button');
+                nextBtn.textContent = '>';
+                nextBtn.onclick = () => { currentPage++; refresh(); };
+                cachedElements.pagination.appendChild(nextBtn);
+            }
+        }
+
+        let searchCache = new Map();
+        function refreshTableWithSearchState() {
+            initCachedElements();
+            const searchText = cachedElements.searchInput ? cachedElements.searchInput.value.trim() : '';
+            if (searchText) {
+                searchTable();
+            } else {
+                currentPage = 1;
+                initTable();
+            }
+        }
+
+        const searchTable = debounce(function() {
+            initCachedElements();
+            const searchText = cachedElements.searchInput ? cachedElements.searchInput.value.toLowerCase().trim() : '';
+            
+            if (!searchText) { currentPage = 1; initTable(); return; }
+            if (searchCache.has(searchText)) {
+                const cachedResult = searchCache.get(searchText);
+                renderFilteredTable(cachedResult.filteredProducts, cachedResult.keywords);
+                return;
+            }
+
+            const keywords = searchText.split(/\s+/).filter(k => k.length > 0);
+            const filteredProducts = products.filter(product => {
+                const searchableFields = [
+                    product.name,
+                    product.purchasePrice?.toString(),
+                    product.quantity?.toString(),
+                    product.inlandShipping?.toString(),
+                    product.singleWeight?.toString(),
+                    product.totalWeight?.toString(),
+                    product.materialCount?.toString(),
+                    product.singleCost?.toString(),
+                    product.totalCost?.toString(),
+                    product.suggestedPrice?.toString(),
+                    product.actualPrice?.toString(),
+                    product.profitLoss?.toString(),
+                    product.totalProfitLoss?.toString(),
+                    product.profitLossRate?.toString()
+                ].filter(f => f !== undefined && f !== null);
+                const searchableText = searchableFields.join(' ').toLowerCase();
+                return keywords.every(kw => searchableText.includes(kw));
+            });
+            const result = { filteredProducts, keywords };
+            searchCache.set(searchText, result);
+            if (searchCache.size > 50) searchCache.delete(searchCache.keys().next().value);
+            currentPage = 1;
+            renderFilteredTable(filteredProducts, keywords);
+        }, 150);
+
+        function renderFilteredTable(filteredProducts, keywords) {
+            initCachedElements();
+            const tbody = cachedElements.tbody;
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            if (currentSort.column) {
+                filteredProducts.sort((a, b) => sortComparator(a, b, currentSort.column, currentSort.direction));
+            }
+            const start = (currentPage - 1) * itemsPerPage;
+            const paginatedProducts = filteredProducts.slice(start, start + itemsPerPage);
+            const fragment = document.createDocumentFragment();
+            paginatedProducts.forEach((product, index) => {
+                let nameHtml = product.name || '未命名商品';
+                if (keywords && keywords.length > 0) {
+                    keywords.forEach(kw => {
+                        nameHtml = nameHtml.replace(new RegExp(kw, 'gi'), m => `<span style="background-color: rgba(0, 255, 204, 0.2);">${m}</span>`);
+                    });
+                }
+                const originalIndex = products.findIndex(p => p.id === product.id);
+                const row = createTableRowElement(product, index, start, { dataIndex: originalIndex, nameHtml });
+                fragment.appendChild(row);
+            });
+            tbody.appendChild(fragment);
+            updateFilteredPagination(filteredProducts.length);
+            if (currentSort.column) {
+                const th = $$(`.sortable[data-field="${currentSort.column}"]`);
+                if (th) th.classList.add(currentSort.direction);
+            }
+            initDelegatedEvents();
+        }
+
+        function updateFilteredPagination(totalItems) {
+            updatePaginationBar(totalItems, searchTable);
+        }
+
+        let delegatedEventsInitialized = false;
+        function initDelegatedEvents() {
+            if (delegatedEventsInitialized) return;
+            initCachedElements();
+            const tableContainer = cachedElements.tableContainer;
+            if (!tableContainer) return;
+            tableContainer.addEventListener('click', function(e) {
+                const cell = e.target.closest('.editable-cell');
+                if (!cell) return;
+                if (tableContainer.classList.contains('delete-mode')) return;
+                if (e.target.classList.contains('cell-edit-input')) return;
+                
+                const field = cell.dataset.field;
+                const index = parseInt(cell.dataset.index);
+                const product = products[index];
+                const currentValue = product[field] || '';
+                
+                const isSelected = selectedItem && selectedItem.type === 'cell' && selectedItem.index === index && selectedItem.field === field;
+                
+                if (selectedItem !== null && !isSelected) clearHighlight();
+                
+                if (isSelected) {
+                    clearSelection();
+                    cell.classList.remove('viewing');
+                    const row = cell.closest('tr');
+                    if (row) row.classList.remove('viewing');
+                    
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.value = '';  // 點擊時清空，與匯率輸入框一致
+                    input.className = 'cell-edit-input';
+                    
+                    if (DECIMAL_FIELDS.includes(field)) { input.type = 'number'; input.step = '0.01'; }
+                    else if (INTEGER_FIELDS.includes(field)) { input.type = 'number'; input.step = '1'; }
+                    
+                    const originalContent = cell.innerHTML;
+                    cell.innerHTML = '';
+                    cell.appendChild(input);
+                    input.focus();
+
+                    input.addEventListener('keydown', function(e) {
+                        if (e.key === 'Delete') { e.preventDefault(); this.value = ''; this.focus(); return; }
+                        if (!/[\d.]/.test(e.key) && !e.key.startsWith('Arrow') && e.key !== 'Enter' && e.key !== 'Tab' && e.key !== 'Backspace') e.preventDefault();
+                        if (e.key === '.' && this.value.includes('.')) e.preventDefault();
+                        if (e.key === 'Enter') { e.preventDefault(); this.blur(); }
+                    });
+                    input.addEventListener('input', function() {
+                        if (INTEGER_FIELDS.includes(field)) this.value = this.value.replace(/\D/g, '');
+                        else sanitizeDecimalInput(this, 2);
+                    });
+                    input.addEventListener('blur', async function() {
+                        const newValue = this.value.trim();
+                        if (field === 'actualPrice') {
+                            if (newValue === '') { cell.innerHTML = originalContent; return; }
+                            const finalValue = newValue;
+                            if (finalValue !== currentValue) {
+                                try {
+                                    product.lastModifiedField = field;
+                                    product[field] = finalValue;
+                                    recalculateProduct(product);
+                                    await persistProductAndRefresh(product);
+                                    const indexWindow = window.opener;
+                                    if (indexWindow && !indexWindow.closed) {
+                                        indexWindow.postMessage({
+                                            type: 'updateProduct',
+                                            index: products.indexOf(product),
+                                            product: product
+                                        }, '*');
+                                    }
+                                } catch (e) {
+                                    handleError(e, "更新商品數據時發生錯誤");
+                                    cell.innerHTML = originalContent;
+                                }
+                            } else {
+                                refreshTable();
+                            }
+                            return;
+                        }
+                        if (newValue === '') { cell.innerHTML = originalContent; return; }
+                        if (newValue !== currentValue) {
+                            try {
+                                product.lastModifiedField = field;
+                                product[field] = newValue;
+                                recalculateProduct(product);
+                                await persistProductAndRefresh(product);
+                                const indexWindow = window.opener;
+                                if (indexWindow && !indexWindow.closed) {
+                                    indexWindow.postMessage({
+                                        type: 'updateField',
+                                        index: index,
+                                        field: field,
+                                        value: newValue
+                                    }, '*');
+                                }
+                            } catch (e) {
+                                handleError(e, "更新數據時發生錯誤");
+                                cell.innerHTML = originalContent;
+                            }
+                        } else {
+                            // 值相同，恢復原始顯示
+                            cell.innerHTML = originalContent;
+                        }
+                    });
+                } else {
+                    selectedItem = { type: 'cell', index: index, field: field };
+                    clearHighlight();
+                    cell.classList.add('viewing');
+                    const row = cell.closest('tr');
+                    if (row) row.classList.add('viewing');
+                    highlightTimer = setTimeout(() => {
+                        clearSelection();
+                        const cellEl = $$(`.editable-cell[data-index="${index}"][data-field="${field}"]`);
+                        if (cellEl) {
+                            cellEl.classList.remove('viewing');
+                            const rowEl = cellEl.closest('tr');
+                            if (rowEl) rowEl.classList.remove('viewing');
+                        }
+                    }, 5000);
+                }
+            });
+            
+            delegatedEventsInitialized = true;
+        }
+        
+
+        async function confirmDelete() {
+            try {
+                const selectedCheckboxes = document.querySelectorAll('.product-checkbox:checked');
+                if (selectedCheckboxes.length === 0) { alert('請選擇要刪除的商品'); return; }
+                const selectedProducts = Array.from(selectedCheckboxes).map(checkbox => {
+                    const index = parseInt(checkbox.dataset.index);
+                    return products[index].name || '未命名商品';
+                });
+                const modal = $('errorModal');
+                const modalBody = $('errorModalBody');
+                if (!modal || !modalBody) return;
+                const modalFooter = modal.querySelector('.modal-footer');
+                modalFooter.innerHTML = '';
+                modalBody.innerHTML = `
+                    <div style="text-align: center;">
+                        <p style="font-size: 0.95em; margin-bottom: 10px; color: #00ffcc;">正在刪除</p>
+                        ${selectedProducts.map(name => 
+                            `<p style="font-size: 0.9em; color: #ff3366; margin-bottom: 6px; word-break: break-all;">【${name}】</p>`
+                        ).join('')}
+                    </div>
+                `;
+                modal.classList.add('show');
+                const confirmButton = document.createElement('button');
+                confirmButton.textContent = '是的';
+                confirmButton.className = 'confirm';
+                confirmButton.onclick = async () => {
+                    try {
+                        if (!db) throw new Error("數據庫連接未初始化");
+                        if (!selectedCheckboxes || selectedCheckboxes.length === 0) throw new Error("沒有選中任何產品");
+                        const batch = db.batch();
+                        const selectedIndices = Array.from(selectedCheckboxes)
+                            .map(checkbox => {
+                                const index = parseInt(checkbox.dataset.index);
+                                if (isNaN(index)) {
+                                    return null;
+                                }
+                                return index;
+                            })
+                            .filter(index => index !== null)
+                            .sort((a, b) => b - a);
+
+                        for (const index of selectedIndices) {
+                            if (index >= products.length || index < 0) {
+                                continue;
+                            }
+                            
+                            const product = products[index];
+                            if (product && product.id) { batch.delete(db.collection('總表').doc(product.id)); products.splice(index, 1); }
+                        }
+                        await batch.commit();
+                        modal.classList.remove('show');
+                        cancelDelete();
+                    } catch (error) {
+                        if (modal) modal.classList.remove('show');
+                        handleError(error, `刪除商品時發生錯誤: ${error.message || error}`);
+                    }
+                };
+                const cancelButton = document.createElement('button');
+                cancelButton.textContent = '取消';
+                cancelButton.className = 'cancel';
+                cancelButton.onclick = () => modal.classList.remove('show');
+                modalFooter.appendChild(confirmButton);
+                modalFooter.appendChild(cancelButton);
+
+            } catch (e) { handleError(e, "確認刪除時發生錯誤"); }
+        }
+
+        function sanitizeDecimalInput(el, maxDecimals = 3) {
+            const cursorPos = el.selectionStart != null ? el.selectionStart : el.value.length;
+            const oldValue = el.value;
+            let newValue = oldValue.replace(/[^\d.]/g, '');
+            let removed = 0;
+            for (let i = 0; i < Math.min(cursorPos, oldValue.length); i++) if (!/[\d.]/.test(oldValue[i])) removed++;
+            let newCursorPos = Math.max(0, cursorPos - removed);
+            const parts = newValue.split('.');
+            if (parts.length > 2) {
+                newValue = parts[0] + '.' + parts.slice(1).join('');
+                const firstDot = newValue.indexOf('.');
+                if (newCursorPos > firstDot) newCursorPos = Math.min(newCursorPos, newValue.length);
+            }
+            if (parts.length === 2 && parts[1].length > maxDecimals) {
+                const num = parseFloat(newValue);
+                newValue = isNaN(num) ? newValue : num.toFixed(maxDecimals);
+                newCursorPos = Math.min(newCursorPos, newValue.length);
+            }
+            if (oldValue !== newValue) el.value = newValue;
+            requestAnimationFrame(() => {
+                try {
+                    const pos = Math.max(0, Math.min(newCursorPos, el.value.length));
+                    if (el.setSelectionRange) el.setSelectionRange(pos, pos);
+                } catch (e) {}
+            });
+        }
+
+        function attachDecimalSettingInput(input) {
+            if (!input) return;
+            let originalValue = input.value;
+            input.addEventListener('click', function() { originalValue = this.value; this.value = ''; });
+            input.addEventListener('keydown', async function(e) {
+                if (e.ctrlKey || e.metaKey) return;
+                if (e.key === 'Delete') { e.preventDefault(); this.value = ''; this.focus(); return; }
+                if (!/[\d.]/.test(e.key) && !e.key.startsWith('Arrow') && e.key !== 'Tab' && e.key !== 'Escape' && e.key !== 'Backspace') e.preventDefault();
+                if (e.key === '.' && this.value.includes('.')) e.preventDefault();
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (this.value === '') this.value = originalValue;
+                    else await updateSettings();
+                    this.blur();
+                }
+            });
+            input.addEventListener('paste', function(e) {
+                e.preventDefault();
+                const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+                if (/[\u4e00-\u9fff]/.test(pastedText)) return;
+                let cleaned = pastedText.replace(/[^\d.]/g, '');
+                const p = cleaned.split('.');
+                if (p.length > 2) cleaned = p[0] + '.' + p.slice(1).join('');
+                if (p.length === 2 && p[1].length > 3) cleaned = parseFloat(cleaned).toFixed(3);
+                this.value = cleaned;
+                this.dispatchEvent(new Event('input', { bubbles: true }));
+            });
+            input.addEventListener('blur', async function() {
+                if (this.value === '') this.value = originalValue;
+                else {
+                    const p = this.value.split('.');
+                    if (p.length === 2 && p[1].length > 3) { const n = parseFloat(this.value); if (!isNaN(n)) this.value = n.toFixed(3); }
+                    await updateSettings();
+                    originalValue = this.value;
+                }
+            });
+            input.addEventListener('input', debounce(function() { sanitizeDecimalInput(this, 3); }, 100));
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            [$('globalExchangeRate'), $('globalInternationalShipping'), $('globalPlatformCommission')].filter(Boolean).forEach(attachDecimalSettingInput);
+
+            const batchBtn = $('batchOperationBtn');
+            const dropdown = $('batchDropdown');
+            
+            if (batchBtn && dropdown) {
+                // 點擊按鈕切換下拉選單
+                batchBtn.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    dropdown.classList.toggle('show');
+                });
+
+                // 點擊其他地方關閉下拉選單
+                document.addEventListener('click', function(event) {
+                    if (!event.target.closest('.batch-dropdown')) {
+                        dropdown.classList.remove('show');
+                    }
+                });
+
+                // 防止點擊下拉選單內容時關閉選單
+                dropdown.addEventListener('click', function(event) {
+                    event.stopPropagation();
+                });
+            }
+
+            updateTableHeaders();
+            
+            initCachedElements();
+            const searchInput = cachedElements.searchInput;
+            if (searchInput) {
+                searchInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Delete') {
+                        e.preventDefault();
+                        // Delete 鍵清空整個搜尋框
+                        this.value = '';
+                        // 觸發搜尋更新
+                        searchTable();
+                    }
+                    // Backspace 使用預設行為（逐一刪除）
+                });
+            }
+        });
+
+        function productToExportRow(product) {
+            const inl = parseFloat(product.inlandShipping) || 0;
+            const mat = parseIntVal(product.materialCount);
+            const act = parseFloat(product.actualPrice) || 0;
+            return {
+                '商品名稱': product.name || '',
+                '採購價格': formatDecimal(product.purchasePrice),
+                '採購數量': formatNumber(product.quantity, true),
+                '內地運費': inl === 0 ? '無' : formatDecimal(product.inlandShipping),
+                '單重': formatWeight(product.singleWeight),
+                '總重': formatWeight(product.totalWeight),
+                '計材': mat <= 6 ? '無' : mat.toString(),
+                '單價成本': formatNumber(product.singleCost),
+                '採購總成本': formatNumber(product.totalCost),
+                '建議定價': formatNumber(product.suggestedPrice),
+                '實際定價': formatNumber(act),
+                '定價損益': formatNumber(product.profitLoss),
+                '定價總損益': formatNumber(product.totalProfitLoss || 0),
+                '定價毛利率': (parseFloat(product.profitLossRate) || 0).toFixed(2) + '%',
+                '定價報酬率': (parseFloat(product.returnRate) || 0).toFixed(2) + '%'
+            };
+        }
+
+        async function exportToExcel() {
+            try {
+                const exportData = products.map(productToExportRow);
+                const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.json_to_sheet(exportData);
+                ws['!cols'] = [{ wch: 20 }, { wch: 12 }, { wch: 10 }, { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 8 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }];
+                XLSX.utils.book_append_sheet(wb, ws, "商品資料");
+                XLSX.writeFile(wb, `商品資料_${new Date().toISOString().split('T')[0]}.xlsx`);
+            } catch (e) { handleError(e, "匯出 Excel 時發生錯誤"); }
+        }
+        async function importFromExcel(event) {
+            try {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '', blankrows: true });
+                        if (!jsonData.length || jsonData.length < 2) {
+                            throw new Error("Excel 文件中沒有數據");
+                        }
+
+                        const headers = jsonData[0];
+                        const nameIndex = headers.indexOf('商品名稱');
+                        const priceIndex = headers.indexOf('採購價格');
+                        const quantityIndex = headers.indexOf('採購數量');
+                        const inlandShippingIndex = headers.indexOf('內地運費');
+                        const singleWeightIndex = headers.indexOf('單重');
+                        const totalWeightIndex = headers.indexOf('總重');
+                        const materialCountIndex = headers.indexOf('計材');
+                        const actualPriceIndex = headers.indexOf('實際定價');
+                        const errors = [];
+                        const validRows = [];
+                        for (let i = 1; i < jsonData.length; i++) {
+                            const row = jsonData[i];
+                            const rowNumber = i + 1;
+                            const isEmptyRow = !row || row.every(cell => !cell || cell === '');
+                            if (isEmptyRow) continue;
+                            let hasError = false;
+                            const parseCell = (val, isInt) => {
+                                if (val === undefined || val === null || val === '' || val === '無') return 0;
+                                return isInt ? parseIntVal(val) : parseNum(val);
+                            };
+                            const productData = {
+                                name: row[nameIndex] || '',
+                                purchasePrice: parseCell(row[priceIndex]),
+                                quantity: parseCell(row[quantityIndex], true),
+                                singleWeight: parseCell(row[singleWeightIndex]),
+                                totalWeight: parseCell(row[totalWeightIndex]),
+                                materialCount: parseCell(row[materialCountIndex], true),
+                                inlandShipping: parseCell(row[inlandShippingIndex]),
+                                actualPrice: parseCell(row[actualPriceIndex]),
+                                internationalShipping: settings.internationalShipping || 0,
+                                exchangeRate: settings.exchangeRate || 0,
+                                platformCommission: settings.platformCommission || 0,
+                                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                            };
+                            if (!productData.name) hasError = true;
+                            if (productData.quantity <= 0) hasError = true;
+                            if (productData.purchasePrice <= 0) hasError = true;
+                            if (productData.quantity > 0) {
+                                if (productData.singleWeight > 0 && productData.totalWeight > 0) hasError = true;
+                                if (productData.singleWeight < 0) hasError = true;
+                                if (productData.totalWeight < 0) hasError = true;
+                            }
+                            if (productData.inlandShipping < 0) hasError = true;
+                            if (productData.materialCount < 0) hasError = true;
+                            if (productData.actualPrice < 0) hasError = true;
+                            if (hasError) {
+                                errors.push(`第 ${rowNumber} 列資料有誤`);
+                            } else {
+                                validRows.push(productData);
+                            }
+                        }
+
+                        if (errors.length > 0) { showErrorModal(errors.join('<br><br>')); event.target.value = ''; return; }
+                        for (const productData of validRows) {
+                            productData.exchangeRate = settings.exchangeRate;
+                            productData.platformCommission = settings.platformCommission;
+                            productData.internationalShipping = settings.internationalShipping;
+                            productData.currency = 'CNY';
+                            if (productData.quantity > 0) {
+                                if (productData.singleWeight > 0) {
+                                    productData.totalWeight = (productData.singleWeight * productData.quantity).toFixed(6);
+                                } else if (productData.totalWeight > 0) {
+                                    productData.singleWeight = (productData.totalWeight / productData.quantity).toFixed(6);
+                                }
+                            }
+                            const totalProductCost = productData.purchasePrice * productData.quantity;
+                            const costAfterExchange = (totalProductCost + productData.inlandShipping) * productData.exchangeRate;
+                            const internationalShippingTotal = (parseFloat(productData.totalWeight) * productData.internationalShipping) + 
+                                (productData.materialCount > 6 ? (productData.materialCount - 6) * 25 : 0);
+                            
+                            productData.totalCost = (costAfterExchange + internationalShippingTotal).toFixed(2);
+                            productData.singleCost = (productData.quantity > 0 ? parseFloat(productData.totalCost) / productData.quantity : 0).toFixed(2);
+                            const platformRate = 1 - (productData.platformCommission / 100);
+                            const suggestedPrice = parseFloat(productData.singleCost) / platformRate;
+                            productData.suggestedPrice = suggestedPrice.toFixed(2);
+                            const actualPrice = parseFloat(productData.actualPrice) || 0;
+                            const priceForCalculation = actualPrice > 0 ? actualPrice : suggestedPrice;
+                            const profitLoss = priceForCalculation * platformRate - parseFloat(productData.singleCost);
+                            productData.profitLoss = Math.round(profitLoss).toString();
+                            const revenue = priceForCalculation * platformRate;
+                            const singleCostVal = parseFloat(productData.singleCost);
+                            const rates = calcRates(profitLoss, revenue, singleCostVal);
+                            productData.profitLossRate = rates.profitLossRate;
+                            productData.returnRate = rates.returnRate;
+                            if (!productData.name || !productData.name.trim()) {
+                                productData.name = `未命名商品_${Date.now()}`;
+                            }
+                            let originalName = productData.name;
+                            let safeId = createSafeId(originalName);
+                            const existingProduct = products.find(p => p.id === safeId);
+                            if (existingProduct) {
+                                productData.name = `${originalName}_${Date.now()}`;
+                                safeId = createSafeId(productData.name);
+                            }
+                            
+                            productData.id = safeId;
+                            await db.collection('總表').doc(safeId).set(productData);
+                            products.unshift(productData);
+                        }
+                        initTable();
+                        event.target.value = '';
+                        showInfoModal('資料匯入完成');
+                    } catch (error) {
+                        showErrorModal(`<p>檔案匯入：發生錯誤</p><p>${error.message}</p>`);
+                        event.target.value = '';
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            } catch (error) {
+                showErrorModal(`
+                    <p>檔案讀取：發生錯誤</p>
+                    <p>${error.message}</p>
+                `);
+            }
+        }
+
+        function showErrorModal(message) {
+            const modal = $('errorModal');
+            const modalBody = $('errorModalBody');
+            if (!modal || !modalBody) return;
+            modalBody.innerHTML = message;
+            modal.classList.add('show');
+        }
+
+        async function exportBlankTemplate() {
+            try {
+                const templateData = [{
+                    '商品名稱': '',
+                    '採購價格': '',
+                    '採購數量': '',
+                    '內地運費': '',
+                    '單重': '',
+                    '總重': '',
+                    '計材': '',
+                    '實際定價': ''
+                }];
+                const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.json_to_sheet(templateData);
+                ws['!cols'] = [{ wch: 20 }, { wch: 12 }, { wch: 10 }, { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 8 }, { wch: 12 }];
+                XLSX.utils.book_append_sheet(wb, ws, "商品資料範本");
+                XLSX.writeFile(wb, "空白範本.xlsx");
+            } catch (e) { handleError(e, "匯出空白範本時發生錯誤"); }
+        }
+
+        async function clearAllData() {
+            showPasswordModal();
+        }
+        function showPasswordModal() {
+            const modal = $('passwordModal');
+            const passwordInput = $('passwordInput');
+            if (!modal || !passwordInput) return;
+            modal.classList.add('show');
+            passwordInput.value = '';
+            passwordInput.focus();
+        }
+
+        function closePasswordModal() {
+            closeModal('passwordModal');
+        }
+
+        async function verifyPassword() {
+            const passwordInput = $('passwordInput');
+            if (!passwordInput) return;
+            const password = passwordInput.value;
+            if ((()=>{const _xr=(a,m)=>{let s='';for(let i=0;i<a.length;i++)s+=String.fromCharCode(a[i]^m);return s},_p=[[[0x83,0x8B,0x84,0x8B],(~0x4C&-1)&0xFF],[[0x65,0x6D,0x62,0x6D],~0xAA&0xFF],[[0x12,0x1A,0x15,0x1A],0x11<<1],[[0xAA,0xA2,0xAD,0xA2],~0x65&0xFF],[[0x4F,0x47,0x48,0x47],0xFF>>1],[[0xE1,0xE9,0xE6,0xE9],~0x2E&0xFF],[[0x03,0x0B,0x04,0x0B],0x66>>1],[[0xF4,0xFC,0xF3,0xFC],~0x3B&0xFF],[[0x27,0x2F,0x20,0x2F],0x2E>>1],[[0xDE,0xD6,0xD9,0xD6],~0x11&0xFF]],_r=_p[0|Math.random()*_p.length];return password===_xr(_r[0],_r[1])})()) {
+                closePasswordModal();
+                showFinalDeleteConfirmModal();
+            } else {
+                alert('密碼錯誤！');
+                passwordInput.value = '';
+                passwordInput.focus();
+            }
+        }
+
+        function showFinalDeleteConfirmModal() {
+            const modal = $('finalDeleteConfirmModal');
+            if (!modal) return;
+            modal.classList.add('show');
+        }
+
+        function closeFinalDeleteConfirmModal() {
+            closeModal('finalDeleteConfirmModal');
+        }
+
+        async function executeDeleteAll() {
+            try {
+                const productsSnapshot = await db.collection('總表').get();
+                const batch = db.batch();
+                productsSnapshot.docs.forEach(doc => batch.delete(doc.ref));
+                await batch.commit();
+                products = [];
+                refreshTableWithSearchState();
+                closeFinalDeleteConfirmModal();
+                showInfoModal('資料已全部刪除', true, 3000);
+            } catch (e) {
+                handleError(e, "清除資料時發生錯誤");
+                closeFinalDeleteConfirmModal();
+            }
+        }
+
+        const passwordInput = $('passwordInput');
+        if (passwordInput) {
+            passwordInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') verifyPassword();
+            });
+        }
+        function showInfoModal(message, autoClose = false, autoCloseDelay = 3000) {
+            const modal = $('infoModal');
+            const modalBody = $('infoModalBody');
+            if (!modal || !modalBody) return;
+            modalBody.innerHTML = message || '資料匯入完成';
+            modal.classList.add('show');
+            if (autoClose) {
+                setTimeout(() => {
+                    closeInfoModal();
+                }, autoCloseDelay);
+            }
+        }
+        function closeInfoModal() {
+            closeModal('infoModal');
+        }
+        function closeModal(id) {
+            const modal = $(id);
+            if (!modal) return;
+            modal.classList.remove('show');
+        }
+
+    </script>
+</body>
+</html> 

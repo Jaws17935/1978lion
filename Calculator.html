@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>計算機</title>
+  <style>
+    :root { --primary-color: #00ffcc; --error-color: #ff3366; --bg-dark: #0f0c29; --input-bg: rgba(0,255,204,0.1); --input-glow: 0 0 10px rgba(0,255,204,0.3); --glow-box: 0 0 20px rgba(0,255,204,0.3); --background-gradient: linear-gradient(135deg,#0f0c29,#302b63,#24243e); }
+    body { margin: 0; padding: 0; background: var(--background-gradient); color: var(--primary-color); font-family: 'Arial', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: auto; position: relative; }
+    .dashboard { padding: 10px; background: rgba(255,255,255,0.1); border-radius: 15px; backdrop-filter: blur(10px); box-shadow: var(--glow-box); width: 380px; display: flex; flex-direction: column; box-sizing: border-box; margin: 12px; border: 0.5px solid rgba(0,255,204,0.3); }
+    .input-section { flex-grow: 1; display: flex; flex-direction: column; align-items: center; width: 100%; }
+    .card { background: rgba(0,0,0,0.5); border-radius: 10px; padding: 6px; box-shadow: var(--input-glow); text-align: center; width: 100%; box-sizing: border-box; }
+    .card h1 { margin: 0 0 10px; font-size: 1.6em; color: var(--primary-color); text-shadow: 0 0 5px rgba(0,255,204,0.7); }
+    .card label { display: block; margin: 4px auto 2px; color: var(--primary-color); font-size: 0.95em; font-weight: bold; width: fit-content; }
+    .card input[type="text"] { width: 85%; max-width: 250px; padding: 6px; background: var(--input-bg); border: 0.5px solid var(--primary-color); border-radius: 5px; color: #fff; font-size: 0.9em; display: block; margin: 0 auto; text-align: center; box-sizing: border-box; }
+    .card input[type="text"]:focus { outline: none; box-shadow: var(--input-glow); }
+    .radio-group { margin: 6px auto; display: flex; justify-content: center; gap: 12px; width: fit-content; flex-wrap: nowrap; }
+    .radio-group label { display: inline-flex; align-items: center; margin: 0; font-size: 0.9em; font-weight: normal; white-space: nowrap; }
+    .radio-group input[type="radio"] { margin-right: 5px; }
+    .error-message, .formula-error { color: var(--error-color); font-size: 0.9em; margin: 2px auto; display: block; width: fit-content; }
+    .result { margin: 8px auto; padding: 6px; background: rgba(0,0,0,0.7); border-radius: 6px; border: 0.5px solid var(--primary-color); flex-shrink: 0; display: flex; flex-direction: column; align-items: center; width: 70%; max-width: 200px; box-sizing: border-box; text-align: center; }
+    .result p { margin: 2px 0; font-size: 0.9em; }
+    .weight-input-group, .price-input-group { display: flex; align-items: center; justify-content: center; width: 85%; max-width: 250px; margin: 6px auto; position: relative; }
+    .weight-input-group input[type="text"], .price-input-group input[type="text"] { width: 100%; padding: 6px 60px; background: var(--input-bg); border: 0.5px solid var(--primary-color); border-radius: 5px; color: #fff; font-size: 0.9em; text-align: center; box-sizing: border-box; }
+    .weight-mode-select, .weight-unit-select, .price-unit-select, .price-currency-select { position: absolute; width: 50px; padding: 6px; background: var(--input-bg); border: none; color: #fff; font-size: 0.9em; text-align: center; text-align-last: center; box-sizing: border-box; cursor: pointer; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: none; }
+    .weight-mode-select, .price-currency-select { left: 1px; top: 1px; bottom: 1px; border-right: 0.5px solid var(--primary-color); border-radius: 5px 0 0 5px; }
+    .weight-unit-select, .price-unit-select { right: 1px; top: 1px; bottom: 1px; border-left: 0.5px solid var(--primary-color); border-radius: 0 5px 5px 0; }
+    .weight-mode-select option, .weight-unit-select option, .price-unit-select option, .price-currency-select option { background: var(--bg-dark); color: var(--primary-color); text-align: center; }
+    .material-input-group { display: flex; align-items: center; justify-content: center; width: 85%; max-width: 250px; margin: 6px auto; position: relative; height: 32px; }
+    .material-label { position: absolute; padding: 0; background: var(--input-bg); border: none; color: #fff; font-size: 0.85em; text-align: center; box-sizing: border-box; cursor: pointer; min-width: 50px; display: flex; align-items: center; justify-content: center; height: 30px; line-height: 30px; }
+    .material-label:first-child { left: 1px; top: 1px; bottom: 1px; border-right: 0.5px solid var(--primary-color); border-radius: 5px 0 0 5px; }
+    .material-label:last-child { right: 1px; top: 1px; bottom: 1px; border-left: 0.5px solid var(--primary-color); border-radius: 0 5px 5px 0; }
+    #material_count { width: 100%; padding: 0 60px; background: var(--input-bg); border: 0.5px solid var(--primary-color); border-radius: 5px; color: #fff; font-size: 0.85em; text-align: center; box-sizing: border-box; line-height: 30px; height: 30px; }
+    #material_count:focus { outline: none; box-shadow: var(--input-glow); }
+    .material-normal, .material-extra { color: #fff; background: var(--input-bg); }
+    .material-normal.active { color: var(--primary-color); text-shadow: 0 0 5px rgba(0,255,204,0.5); }
+    .material-extra.active { color: var(--error-color); text-shadow: 0 0 5px rgba(255,51,102,0.5); }
+    .material-input-group:hover { box-shadow: var(--input-glow); }
+    .page-title-editable { cursor: pointer; outline: none; padding: 5px; border-radius: 5px; }
+    .page-title-editable:focus { background: rgba(0,255,204,0.1); }
+    .action-buttons { margin: 8px 0; display: flex; gap: 20px; justify-content: center; }
+    .btn-primary { background: rgba(0,255,204,0.1); border: 1px solid var(--primary-color); color: var(--primary-color); padding: 6px 16px; border-radius: 5px; cursor: pointer; transition: all 0.3s ease; }
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
+    .modal.show { display: flex; }
+    .modal-content { background: rgba(15,12,41,0.98); padding: 16px; border-radius: 12px; border: 1px solid var(--primary-color); box-shadow: var(--glow-box); width: 280px; display: flex; flex-direction: column; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); animation: modalFadeIn 0.3s ease; }
+    @keyframes modalFadeIn { from { opacity: 0; transform: translate(-50%, -50%) scale(0.95); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+    .modal-body { color: #fff; margin-bottom: 12px; text-align: center; }
+    .modal-body input { width: 100%; padding: 8px 12px; background: var(--input-bg); border: 1px solid var(--primary-color); border-radius: 6px; color: #fff; font-size: 0.95em; box-sizing: border-box; text-align: center; transition: all 0.3s ease; }
+    .modal-body input:focus { outline: none; box-shadow: var(--input-glow); border-color: var(--primary-color); }
+    .modal-footer { display: flex; justify-content: center; gap: 8px; }
+    .modal-footer button { padding: 6px 12px; border-radius: 6px; cursor: pointer; transition: all 0.3s ease; font-size: 0.9em; min-width: 70px; border: 1px solid var(--primary-color); color: var(--primary-color); background: rgba(0,255,204,0.1); }
+    .modal-footer button.cancel { background: rgba(255,51,102,0.1); border: 1px solid var(--error-color); color: var(--error-color); }
+    .modal-footer button.cancel:hover { background: rgba(255,51,102,0.2); box-shadow: 0 0 10px rgba(255,51,102,0.3); }
+    .modal-footer button:hover { background: rgba(0,255,204,0.2); box-shadow: var(--input-glow); }
+    .toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.7); backdrop-filter: blur(10px); padding: 12px 24px; border-radius: 8px; border: 0.5px solid var(--primary-color); box-shadow: var(--glow-box); z-index: 3000; display: none; align-items: center; justify-content: center; animation: toastFadeIn 0.3s ease; min-width: 120px; text-align: center; }
+    .toast.show { display: flex; }
+    .toast.success { border-color: var(--primary-color); box-shadow: var(--glow-box); }
+    .toast.error { border-color: var(--error-color); box-shadow: 0 0 15px rgba(255,51,102,0.3); }
+    .toast-message { color: var(--primary-color); font-size: 1em; font-weight: bold; text-shadow: 0 0 5px rgba(0,255,204,0.7); }
+    .toast.success .toast-message { color: var(--primary-color); text-shadow: 0 0 5px rgba(0,255,204,0.7); }
+    .toast.error .toast-message { color: var(--error-color); text-shadow: 0 0 5px rgba(255,51,102,0.7); }
+    @keyframes toastFadeIn { from { opacity: 0; transform: translate(-50%, -50%) scale(0.9); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+  </style>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="API KEY/config.js"></script>
+</head>
+<body>
+  <div class="dashboard">
+    <div class="card">
+      <div class="input-section">
+        <h1 id="pageTitle" class="page-title-editable">商品名稱</h1>
+        <div>
+          <div class="price-input-group">
+            <select id="price_currency" class="price-currency-select">
+              <option value="CNY" selected>CNY</option>
+              <option value="NTD">NTD</option>
+            </select>
+            <input type="text" id="product_price" value="">
+            <select id="price_unit" class="price-unit-select">
+              <option value="unit" selected>單價</option>
+              <option value="total">總價</option>
+            </select>
+          </div>
+          <span id="product_price_error" class="error-message"></span>
+          <span id="product_price_formula_error" class="formula-error"></span>
+          
+          <label for="purchase_quantity">採購數量</label>
+          <input type="text" id="purchase_quantity" value="">
+          <span id="purchase_quantity_error" class="error-message"></span>
+          <span id="purchase_quantity_formula_error" class="formula-error"></span>
+          <div class="radio-group">
+            <label><input type="radio" name="shipping_included" id="shipping_included_no" value="N" checked tabindex="0"> 無郵費</label>
+            <label><input type="radio" name="shipping_included" id="shipping_included_yes" value="Y" tabindex="0"> 需郵費</label>
+          </div>
+          <input type="text" id="inland_shipping" value="">
+          <span id="inland_shipping_error" class="error-message"></span>
+          <span id="inland_shipping_formula_error" class="formula-error"></span>
+          <div class="weight-input-group">
+            <select id="weight_mode" class="weight-mode-select">
+              <option value="single" selected>單重</option>
+              <option value="total">總重</option>
+            </select>
+            <input type="text" id="weight_value" value="">
+            <select id="weight_unit" class="weight-unit-select">
+              <option value="g">G</option>
+              <option value="kg" selected>KG</option>
+            </select>
+          </div>
+          <span id="weight_value_error" class="error-message"></span>
+          <span id="weight_value_formula_error" class="formula-error"></span>
+          <div class="material-input-group">
+            <span class="material-label material-normal">無材</span>
+            <input type="text" id="material_count" value="">
+            <span class="material-label material-extra">計材</span>
+          </div>
+          <span id="material_count_error" class="error-message"></span>
+          <span id="material_count_formula_error" class="formula-error"></span>
+
+          <label for="exchange_rate">採購匯率</label>
+          <input type="text" id="exchange_rate" value="" title="預設值來自全局設定，可修改但不會同步回資料庫">
+          <span id="exchange_rate_error" class="error-message"></span>
+          <span id="exchange_rate_formula_error" class="formula-error"></span>
+          
+          <label for="international_shipping">國際運費</label>
+          <input type="text" id="international_shipping" value="" title="預設值來自全局設定，可修改但不會同步回資料庫">
+          <span id="international_shipping_error" class="error-message"></span>
+          <span id="international_shipping_formula_error" class="formula-error"></span>
+          
+          <label for="platform_commission_rate_n">平台抽成</label>
+          <input type="text" id="platform_commission_rate_n" value="" title="預設值來自全局設定，可修改但不會同步回資料庫">
+          <span id="platform_commission_rate_n_error" class="error-message"></span>
+          <span id="platform_commission_rate_n_formula_error" class="formula-error"></span>
+          
+          <label for="profit_margin_rate_n">實際定價</label>
+          <input type="text" id="profit_margin_rate_n" value="">
+          <span id="profit_margin_rate_n_error" class="error-message"></span>
+          <span id="profit_margin_rate_n_formula_error" class="formula-error"></span>
+        </div>
+      </div>
+      <div class="result" id="result_area" style="display:none;">
+        <p id="result_single_weight"></p>
+        <p id="result_total_weight"></p>
+        <p id="result_extra_material_fee"></p>
+        <p id="result_single_cost"></p>
+        <p id="result_total_cost"></p>
+        <p>建議定價：<span id="suggested_pricing"></span></p>
+        <p>定價損益：<span id="suggested_profit_loss"></span></p>
+      </div>
+      <div class="action-buttons">
+        <button onclick="saveToFirestore()" id="saveButton" class="btn-primary">保存</button>
+        <button id="viewButton" onclick="viewInProducts()" class="btn-primary">查看</button>
+      </div>
+    </div>
+  </div>
+  <div class="modal" id="nameModal">
+    <div class="modal-content">
+      <div class="modal-body">
+        <input type="text" id="productNameInput" placeholder="請輸入商品名稱">
+      </div>
+      <div class="modal-footer">
+        <button onclick="confirmSave()">保存</button>
+        <button class="cancel" onclick="closeNameModal(true)">取消</button>
+      </div>
+    </div>
+  </div>
+  <div class="toast" id="saveToast">
+    <div class="toast-message" id="toastMessage"></div>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: (window.__FIREBASE_API_KEY__ || "").trim() || undefined,
+      authDomain: "computer-168.firebaseapp.com",
+      projectId: "computer-168",
+      storageBucket: "computer-168.firebasestorage.app",
+      messagingSenderId: "1008079543770",
+      appId: "1:1008079543770:web:c45802292e9684357ab4e3",
+      measurementId: "G-Z0SYWETVV9"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    let currentPreciseWeights = { singleWeight: null, totalWeight: null };
+    let activeInputState = { element: null, value: '', selectionStart: 0, selectionEnd: 0, isRestoring: false };
+    function saveInputState() {
+      const el = document.activeElement;
+      if (el && el.type === 'text' && el.tagName === 'INPUT') {
+        activeInputState.element = el;
+        activeInputState.value = el.value;
+        activeInputState.selectionStart = el.selectionStart || 0;
+        activeInputState.selectionEnd = el.selectionEnd || 0;
+      }
+    }
+    function restoreInputState() {
+      const el = activeInputState.element;
+      if (!el || el.tagName !== 'INPUT') return;
+      activeInputState.isRestoring = true;
+      el.value = activeInputState.value;
+      setTimeout(() => {
+        if (el.setSelectionRange) {
+          const s = Math.min(activeInputState.selectionStart, activeInputState.value.length);
+          const e = Math.min(activeInputState.selectionEnd, activeInputState.value.length);
+          el.setSelectionRange(s, e);
+          el.focus();
+        }
+        activeInputState.isRestoring = false;
+      }, 10);
+    }
+
+    const getById = id => document.getElementById(id);
+    const resultArea = getById('result_area');
+    const setDisplay = (id, display, useParent = false) => { const el = getById(id); if (!el) return; (useParent && el.parentElement ? el.parentElement : el).style.display = display; };
+    let cachedButtons = { saveButton: null, viewButton: null };
+    
+    const getSaveButton = () => cachedButtons.saveButton || (cachedButtons.saveButton = getById('saveButton'));
+    const getViewButton = () => cachedButtons.viewButton || (cachedButtons.viewButton = getById('viewButton'));
+    
+    const getUrlParams = () => new URLSearchParams(window.location.search);
+    const isEditMode = () => getUrlParams().has('mode') && getUrlParams().get('mode') === 'edit';
+    
+    const handlePasteClean = (text) => text.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
+    
+    const SETTING_FIELD_MAP = { exchangeRate: 'exchange_rate', internationalShipping: 'international_shipping', platformCommission: 'platform_commission_rate_n' };
+    const SETTING_DOC_IDS = { exchangeRate: '採購匯率', internationalShipping: '國際運費', platformCommission: '平台抽成' };
+    const loadFirebaseSettings = async () => {
+      const defaults = { exchangeRate: '4.5', internationalShipping: '45', platformCommission: '20' };
+      const apply = (s) => { Object.entries(SETTING_FIELD_MAP).forEach(([k, id]) => { const el = getById(id); if (el) el.value = s[k] != null && s[k] !== '' ? String(s[k]) : defaults[k]; }); };
+      try {
+        const snaps = await Promise.all(Object.keys(SETTING_DOC_IDS).map(k => db.collection('設定').doc(SETTING_DOC_IDS[k]).get()));
+        const s = {};
+        Object.keys(SETTING_DOC_IDS).forEach((k, i) => { const v = snaps[i].data()?.value; s[k] = v != null && v !== '' ? v : defaults[k]; });
+        apply(s);
+      } catch (error) {
+        apply(defaults);
+      }
+    };
+    
+    const buildCurrentData = () => {
+      const singleWeight = currentPreciseWeights.singleWeight ? parseFloat(currentPreciseWeights.singleWeight) : '';
+      const inlandShipping = getFormattedInlandShipping();
+      let purchasePrice = getById('product_price').value;
+      const priceUnit = getById('price_unit').value;
+      const quantity = parseFloat(getById('purchase_quantity').value) || 0;
+      const priceResult = processPurchasePrice(purchasePrice, priceUnit, quantity);
+      purchasePrice = priceResult.processedPrice;
+      const originalTotalPrice = priceResult.originalTotalPrice;
+      
+      return {
+        name: getById('pageTitle').textContent,
+        currency: getById('price_currency').value,
+        purchasePrice: parseFloat(purchasePrice).toFixed(6),
+        purchasePriceDisplay: formatNumber(purchasePrice),
+        priceUnit: priceUnit,
+        originalTotalPrice: originalTotalPrice,
+        quantity: parseInt(quantity),
+        inlandShipping: inlandShipping,
+        singleWeight: singleWeight ? parseFloat(singleWeight).toFixed(6) : '',
+        singleWeightDisplay: singleWeight ? formatNumber(singleWeight) : '',
+        materialCount: parseInt(getById('material_count').value) || 0,
+        actualPrice: getById('profit_margin_rate_n').value ? formatNumber(getById('profit_margin_rate_n').value, true) : '',
+        singleCost: getById('result_single_cost').textContent.replace('單價：', '').replace(' 元', ''),
+        totalCost: getById('result_total_cost').textContent.replace('總成本：', '').replace(' 元', ''),
+        suggestedPrice: getById('suggested_pricing').textContent.replace(' 元', ''),
+        profitLoss: getById('suggested_profit_loss').textContent.replace(' 元', ''),
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      };
+    };
+    
+    const notifyParent = (msg) => { if (window.opener && !window.opener.closed) window.opener.postMessage(msg, '*'); };
+    const evaluateFormula = str => {
+      if (!str) return 0;
+      if (!/^[0-9+\-*/().\s]+$/.test(str)) return NaN;
+      if (/[+\-*/]$/.test(str.trim())) str = str.trim().slice(0, -1);
+      try { return Function('"use strict"; return (' + str + ');')(); } catch (e) { return NaN; }
+    };
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      if (!isEditMode()) {
+        await loadFirebaseSettings();
+      }
+
+      const selectFields = ['price_currency', 'price_unit', 'weight_mode', 'weight_unit'];
+      selectFields.forEach(fieldId => {
+        const field = getById(fieldId);
+        if (!field) return;
+        field.addEventListener('click', e => { e.target.dataset.originalValue = e.target.value; });
+        field.addEventListener('blur', e => { if (e.target.dataset.originalValue !== undefined) delete e.target.dataset.originalValue; });
+        field.addEventListener('keydown', e => {
+          if (e.key !== 'Escape' || e.target.dataset.originalValue === undefined) return;
+          e.target.value = e.target.dataset.originalValue;
+          delete e.target.dataset.originalValue;
+          (fieldId === 'price_currency' || fieldId === 'price_unit') ? handleCurrencyMode() : calculate();
+          e.target.blur();
+        });
+        field.addEventListener('change', async () => {
+          if (field.dataset.originalValue !== undefined) delete field.dataset.originalValue;
+          (fieldId === 'price_currency' || fieldId === 'price_unit') ? handleCurrencyMode() : calculate();
+          if (!isExcludedField(fieldId)) lastChangedElement = field;
+          autoSaveInEditMode();
+        });
+      });
+
+      const radioButtons = document.querySelectorAll('input[type="radio"][name="shipping_included"]');
+      radioButtons.forEach(radio => {
+        radio.addEventListener('click', e => { const c = document.querySelector('input[name="shipping_included"]:checked'); if (c && c !== e.target) e.target.dataset.originalValue = c.value; });
+        radio.addEventListener('keydown', e => {
+          if (e.key !== 'Escape' || e.target.dataset.originalValue === undefined) return;
+          const orig = document.querySelector(`input[name="shipping_included"][value="${e.target.dataset.originalValue}"]`);
+          if (orig) { orig.checked = true; e.target.checked = false; }
+          delete e.target.dataset.originalValue;
+          handleShippingMode();
+          e.target.blur();
+        });
+        radio.addEventListener('change', () => { radioButtons.forEach(r => { if (r.dataset.originalValue !== undefined) delete r.dataset.originalValue; }); handleShippingMode(); lastChangedElement = radio; autoSaveInEditMode(); });
+      });
+
+      handleMaterialInput();
+      await checkEditMode();
+      
+      if (!isEditMode()) { handleCurrencyMode(); handleShippingMode(); calculate(); getById('product_price').focus(); }
+      attachEnterKeyListeners();
+      const insertTextWithUndo = (element, text) => {
+        if (document.execCommand && document.execCommand('insertText', false, text)) {
+          return true;
+        }
+        const sel = window.getSelection();
+        const range = sel.rangeCount > 0 ? sel.getRangeAt(0) : document.createRange();
+        if (sel.rangeCount === 0) {
+          range.selectNodeContents(element);
+          sel.removeAllRanges();
+          sel.addRange(range);
+        }
+        range.deleteContents();
+        const textNode = document.createTextNode(text);
+        range.insertNode(textNode);
+        range.setStartAfter(textNode);
+        range.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(range);
+        return false;
+      };
+
+      const setupPasteHandler = (element, isInput = false) => {
+        if (!element) return;
+        element.addEventListener('paste', function(e) {
+          e.preventDefault();
+          const paste = (e.clipboardData || window.clipboardData).getData('text');
+          const cleanText = handlePasteClean(paste);
+          if (cleanText) {
+            if (isInput) {
+              const start = this.selectionStart || 0;
+              const end = this.selectionEnd || 0;
+              const currentValue = this.value;
+              this.value = currentValue.substring(0, start) + cleanText + currentValue.substring(end);
+              this.setSelectionRange(start + cleanText.length, start + cleanText.length);
+            } else {
+              insertTextWithUndo(this, cleanText);
+            }
+          }
+        });
+      };
+      
+      setupPasteHandler(getById('pageTitle'));
+      setupPasteHandler(getById('productNameInput'), true);
+    });
+
+    function debounce(func, wait) { let t; return (...args) => { clearTimeout(t); t = setTimeout(() => func(...args), wait); }; }
+
+    let isSaving = false;
+    let lastChangedElement = null;
+    const autoSaveInEditMode = async () => {
+      if (!isEditMode() || isSaving) return;
+      try {
+        isSaving = true;
+        const editData = JSON.parse(decodeURIComponent(getUrlParams().get('data')));
+        const currentData = buildCurrentData();
+        await db.collection('總表').doc(editData.id).update(currentData);
+        notifyParent({ type: 'calculationComplete', product: currentData });
+        showDataChangeStatus(lastChangedElement, 'saved');
+      } catch (error) { showDataChangeStatus(lastChangedElement, 'error'); }
+      finally { isSaving = false; }
+    };
+    const EXCLUDED_FIELDS = ['exchange_rate', 'international_shipping', 'platform_commission_rate_n'];
+    function isExcludedField(id) { return EXCLUDED_FIELDS.includes(id); }
+    function showDataChangeStatus(el, status) {
+      if (!el) return;
+      if (status === 'saved') { el.style.border = '2px solid green'; el.style.boxShadow = '0 0 5px rgba(0,255,0,0.3)'; }
+      else if (status === 'error') { el.style.border = '2px solid red'; el.style.boxShadow = '0 0 5px rgba(255,0,0,0.3)'; }
+    }
+
+    let initialInputValues = {};
+    
+    function formatNumber(value, isInteger = false) {
+      if (value === '' || value === undefined || value === null) return '';
+      const num = parseFloat(value);
+      if (isNaN(num)) return value;
+      return isInteger ? Math.round(num).toString() : ((num % 1 === 0) ? num.toString() : num.toFixed(2).replace(/\.?0+$/, ''));
+    }
+    const restrictToNumbers = (v) => { let s = v.replace(/[^\d.]/g, ''); const p = s.split('.'); if (p.length > 2) s = p[0] + '.' + p.slice(1).join(''); return s; };
+    const setFormulaError = (id, msg) => { const el = getById(id + '_formula_error'); if (el) el.innerText = msg || ''; };
+    const DECIMAL_PLACES = { exchange_rate: 2, platform_commission_rate_n: 1, profit_margin_rate_n: 0 };
+
+    function getFormattedInlandShipping(id = 'inland_shipping') { const v = getById(id).value; return (!v || parseFloat(v) === 0) ? '無' : formatNumber(v); }
+    function processPurchasePrice(price, unit, qty) {
+      if (unit === 'total' && qty > 0) return { processedPrice: (parseFloat(price) / qty).toFixed(6), originalTotalPrice: formatNumber(price) };
+      return { processedPrice: price, originalTotalPrice: '' };
+    }
+
+    let calculationCache = new Map();
+    let lastCalculationInputs = '';
+    let domElements = {};
+    
+    const DOM_IDS = ['product_price','purchase_quantity','exchange_rate','international_shipping','platform_commission_rate_n','profit_margin_rate_n','price_currency','price_unit','shipping_included_yes','inland_shipping','weight_value','weight_unit','weight_mode','material_count','result_single_weight','result_total_weight','result_extra_material_fee','result_single_cost','result_total_cost','suggested_pricing','suggested_profit_loss','product_price_error','purchase_quantity_error','exchange_rate_error'];
+    const DOM_KEYS = ['productPrice','purchaseQuantity','exchangeRate','internationalShipping','platformCommission','profitMargin','priceCurrency','priceUnit','shippingIncludedYes','inlandShipping','weightValue','weightUnit','weightMode','materialCount','resultSingleWeight','resultTotalWeight','resultExtraMaterialFee','resultSingleCost','resultTotalCost','suggestedPricing','suggestedProfitLoss','productPriceError','purchaseQuantityError','exchangeRateError'];
+    function initCalculationElements() {
+      if (Object.keys(domElements).length === 0) domElements = Object.fromEntries(DOM_KEYS.map((k, i) => [k, getById(DOM_IDS[i])]));
+    }
+    
+    function updateResultDisplay(result) {
+      const updates = {
+        singleWeight: () => domElements.resultSingleWeight.innerText = result.singleWeight ? `單重：${result.singleWeight} Kg` : '',
+        totalWeight: () => domElements.resultTotalWeight.innerText = result.totalWeight ? `總重：${result.totalWeight} Kg` : '',
+        extraMaterialFee: () => domElements.resultExtraMaterialFee.innerText = result.extraMaterialFee || '',
+        singleCost: () => domElements.resultSingleCost.innerText = `單價：${result.singleCost} 元`,
+        totalCost: () => domElements.resultTotalCost.innerText = `總成本：${result.totalCost} 元`,
+        suggestedPricing: () => domElements.suggestedPricing.innerText = `${result.suggestedPricing} 元`,
+        finalProfit: () => domElements.suggestedProfitLoss.innerText = `${result.finalProfit} 元`
+      };
+      Object.keys(updates).forEach(key => {
+        if (result[key] !== undefined) updates[key]();
+      });
+    }
+
+    const calculate = () => {
+      try {
+        initCalculationElements();
+        
+        document.querySelectorAll('.error-message, .formula-error').forEach(span => (span.innerText = ''));
+        resultArea.style.display = 'block';
+
+        const inputs = {
+          productPrice: parseFloat(domElements.productPrice.value) || 0,
+          purchaseQuantity: parseFloat(domElements.purchaseQuantity.value) || 0,
+          exchangeRate: parseFloat(domElements.exchangeRate.value) || 0,
+          internationalShipping: parseFloat(domElements.internationalShipping.value) || 0,
+          platformCommission: parseFloat(domElements.platformCommission.value) || 0,
+          profitMargin: parseFloat(domElements.profitMargin.value) || 0,
+          currency: domElements.priceCurrency.value,
+          priceUnit: domElements.priceUnit.value,
+          shippingIncluded: domElements.shippingIncludedYes.checked,
+          inlandShipping: (domElements.shippingIncludedYes.checked && domElements.priceUnit.value !== 'total') ? (parseFloat(domElements.inlandShipping.value) || 0) : 0,
+          weightValue: parseFloat(domElements.weightValue.value) || 0,
+          weightUnit: domElements.weightUnit.value,
+          weightMode: domElements.weightMode.value,
+          materialCount: parseInt(domElements.materialCount.value) || 0
+        };
+        
+        const inputsKey = JSON.stringify(inputs);
+        if (inputsKey === lastCalculationInputs && calculationCache.has(inputsKey)) {
+          updateResultDisplay(calculationCache.get(inputsKey));
+          return;
+        }
+
+        let singleCost = 0, totalCost = 0;
+        if (isNaN(inputs.productPrice) || inputs.productPrice < 0) {
+          domElements.productPriceError.innerText = '請輸入有效的價格';
+          return;
+        }
+
+        if (isNaN(inputs.purchaseQuantity) || inputs.purchaseQuantity < 0) {
+          domElements.purchaseQuantityError.innerText = '請輸入有效的數量';
+          return;
+        }
+
+        if (inputs.currency === 'CNY') {
+          if (inputs.exchangeRate === 0) {
+            domElements.exchangeRateError.innerText = '請輸入採購匯率';
+            return;
+          }
+        }
+
+        let calculationResult = {};
+        
+        if (inputs.currency === 'CNY') {
+          const totalProductCost = inputs.priceUnit === 'unit' ?
+            inputs.productPrice * inputs.purchaseQuantity :
+            inputs.productPrice;
+
+          const costAfterExchange = (totalProductCost + inputs.inlandShipping) * inputs.exchangeRate;
+          const weightUnitFactor = inputs.weightUnit === 'kg' ? 1 : 0.001;
+          const rawWeightValInKg = inputs.weightValue * weightUnitFactor;
+          const finalWeightVal = inputs.weightMode === 'single' ?
+            rawWeightValInKg * inputs.purchaseQuantity :
+            rawWeightValInKg;
+          let extraShippingFee = 0;
+          if (inputs.materialCount > 6) {
+            extraShippingFee = (inputs.materialCount - 6) * 25;
+          }
+          const internationalShippingTotal = (finalWeightVal * inputs.internationalShipping) + extraShippingFee;
+          totalCost = costAfterExchange + internationalShippingTotal;
+          singleCost = inputs.purchaseQuantity > 0 ? totalCost / inputs.purchaseQuantity : totalCost;
+          const calculatedSingleWeight = finalWeightVal / (inputs.purchaseQuantity || 1);
+          
+          currentPreciseWeights.singleWeight = calculatedSingleWeight.toFixed(6);
+          currentPreciseWeights.totalWeight = finalWeightVal.toFixed(6);
+          
+          calculationResult = {
+            singleWeight: formatNumber(calculatedSingleWeight),
+            totalWeight: formatNumber(finalWeightVal),
+            extraMaterialFee: inputs.materialCount > 6 ? `計材：${formatNumber(extraShippingFee)} 元` : '',
+            singleCost: formatNumber(singleCost),
+            totalCost: formatNumber(totalCost)
+          };
+        } else {
+          if (inputs.priceUnit === 'unit') {
+            singleCost = inputs.productPrice;
+            totalCost = inputs.productPrice * inputs.purchaseQuantity;
+          } else {
+            totalCost = inputs.productPrice;
+            singleCost = inputs.purchaseQuantity > 0 ? inputs.productPrice / inputs.purchaseQuantity : 0;
+          }
+          
+          currentPreciseWeights.singleWeight = null;
+          currentPreciseWeights.totalWeight = null;
+          
+          calculationResult = {
+            singleWeight: '',
+            totalWeight: '',
+            extraMaterialFee: '',
+            singleCost: formatNumber(singleCost),
+            totalCost: formatNumber(totalCost)
+          };
+        }
+
+        const commissionRate = inputs.platformCommission / 100;
+        const suggestedPricing = singleCost / (1 - commissionRate);
+        const platformCommission = inputs.profitMargin * commissionRate;
+        const finalProfit = inputs.profitMargin - platformCommission - singleCost;
+
+        calculationResult.suggestedPricing = formatNumber(suggestedPricing);
+        calculationResult.finalProfit = Math.round(finalProfit).toString();
+        
+        calculationCache.set(inputsKey, calculationResult);
+        lastCalculationInputs = inputsKey;
+        
+        if (calculationCache.size > 100) calculationCache.delete(calculationCache.keys().next().value);
+        
+        updateResultDisplay(calculationResult);
+        if (isEditMode()) { const d = buildCurrentData(); localStorage.setItem('updatedProductData', JSON.stringify(d)); notifyParent({ type: 'calculationComplete', product: d }); }
+      } catch (error) {
+        resultArea.style.display = 'block';
+        getById('result_single_cost').innerText = '計算錯誤';
+        getById('result_total_cost').innerText = '請檢查輸入值';
+        getById('suggested_pricing').innerText = '計算錯誤';
+        getById('suggested_profit_loss').innerText = '請檢查輸入值';
+      }
+    };
+
+    const CNY_FIELDS_WITH_PARENT = ['weight_value', 'material_count'];
+    const handleCurrencyMode = async () => {
+      const currencyEl = getById('price_currency');
+      if (isEditMode()) {
+        currencyEl.value = 'CNY';
+        currencyEl.disabled = true;
+        currencyEl.style.opacity = '0.5';
+        currencyEl.style.cursor = 'not-allowed';
+        currencyEl.style.backgroundColor = 'rgba(128, 128, 128, 0.1)';
+        currencyEl.title = '編輯模式下無法修改幣別';
+        const saveBtn = getSaveButton();
+        if (saveBtn) saveBtn.style.display = 'none';
+      } else {
+        currencyEl.disabled = false;
+        currencyEl.style.opacity = '1';
+        currencyEl.style.cursor = 'pointer';
+        currencyEl.style.backgroundColor = '';
+        currencyEl.title = '';
+      }
+
+      const isCNY = currencyEl.value === 'CNY';
+      const isTotalPrice = getById('price_unit').value === 'total';
+      const pageTitle = getById('pageTitle');
+      pageTitle.contentEditable = isCNY ? 'true' : 'false';
+      pageTitle.style.cursor = isCNY ? 'text' : 'pointer';
+
+      let fieldsToHide = [];
+      if (!isCNY) {
+        fieldsToHide = ['shipping_included_yes', 'shipping_included_no', 'weight_value', 'weight_mode', 'weight_unit', 'material_count', 'exchange_rate', 'international_shipping', 'inland_shipping'];
+      } else if (isTotalPrice) {
+        fieldsToHide = ['shipping_included_yes', 'shipping_included_no', 'inland_shipping'];
+        getById('shipping_included_no').checked = true;
+        getById('inland_shipping').value = '';
+      }
+      const fieldsToShow = ['product_price', 'purchase_quantity', 'platform_commission_rate_n', 'profit_margin_rate_n'];
+
+      if (isCNY) {
+        ['weight_value', 'weight_mode', 'weight_unit', 'material_count', 'exchange_rate', 'international_shipping', 'inland_shipping'].forEach(fieldId => {
+          setDisplay(fieldId, CNY_FIELDS_WITH_PARENT.includes(fieldId) ? 'flex' : 'block', CNY_FIELDS_WITH_PARENT.includes(fieldId));
+        });
+        const radioGroup = document.querySelector('.radio-group');
+        if (radioGroup) radioGroup.style.display = 'flex';
+        ['shipping_included_yes', 'shipping_included_no'].forEach(fieldId => setDisplay(fieldId, 'inline-flex', true));
+      }
+
+      const hideUseParent = ['shipping_included_yes', 'shipping_included_no', 'weight_value', 'weight_mode', 'weight_unit', 'material_count'];
+      fieldsToHide.forEach(fieldId => {
+        const el = getById(fieldId);
+        setDisplay(fieldId, 'none', el?.type === 'radio' || hideUseParent.includes(fieldId));
+      });
+      const radioGroup = document.querySelector('.radio-group');
+      if (radioGroup && (fieldsToHide.includes('shipping_included_yes') || fieldsToHide.includes('shipping_included_no'))) {
+        radioGroup.style.display = 'none';
+      }
+
+      document.querySelectorAll('.card label').forEach(label => {
+        const fieldId = label.getAttribute('for');
+        if (fieldId) label.style.display = isCNY ? (fieldsToHide.includes(fieldId) ? 'none' : 'block') : (fieldsToShow.includes(fieldId) ? 'block' : 'none');
+      });
+      document.querySelectorAll('.error-message, .formula-error').forEach(error => {
+        const fieldId = error.id.replace('_error', '').replace('_formula_error', '');
+        error.style.display = isCNY ? (fieldsToHide.includes(fieldId) ? 'none' : '') : (fieldsToShow.includes(fieldId) ? '' : 'none');
+      });
+
+      if (isCNY) {
+        setDisplay('result_single_weight', 'block');
+        setDisplay('result_total_weight', 'block');
+        setDisplay('result_extra_material_fee', 'block');
+        const materialInputGroup = document.querySelector('.material-input-group');
+        if (materialInputGroup && !fieldsToHide.includes('material_count')) materialInputGroup.style.display = 'flex';
+        const saveBtn = getSaveButton(), viewBtn = getViewButton();
+        if (saveBtn) saveBtn.style.display = isEditMode() ? 'none' : 'block';
+        if (viewBtn) viewBtn.style.display = 'block';
+      } else {
+        ['result_extra_material_fee', 'result_single_weight', 'result_total_weight'].forEach(id => {
+          const el = getById(id);
+          if (el) { el.innerText = ''; el.style.display = 'none'; }
+        });
+        const saveBtn = getSaveButton(), viewBtn = getViewButton();
+        if (saveBtn) saveBtn.style.display = 'none';
+        if (viewBtn) viewBtn.style.display = 'block';
+      }
+
+      calculate();
+      handleShippingMode();
+    };
+
+    const handleShippingMode = () => {
+      const inland = getById('inland_shipping');
+      const isTotal = getById('price_unit').value === 'total';
+      const isCNY = getById('price_currency').value === 'CNY';
+      if (isCNY && isTotal) { inland.style.display = 'none'; inland.value = ''; inland.disabled = true; }
+      else if (getById('shipping_included_yes').checked) { inland.style.display = 'block'; inland.disabled = false; if (!inland.value || inland.value === '0') inland.value = ''; }
+      else { inland.style.display = 'none'; inland.value = ''; inland.disabled = true; }
+      calculate();
+    };
+
+    const getFlowOrder = () => {
+      const isCNY = getById('price_currency').value === 'CNY';
+      const isTotal = getById('price_unit').value === 'total';
+      let flow = [getById('product_price'), getById('purchase_quantity')];
+      if (isCNY) {
+        if (!isTotal && getById('shipping_included_yes').checked) flow.push(getById('inland_shipping'));
+        flow.push(getById('weight_value'), getById('material_count'), getById('exchange_rate'), getById('international_shipping'));
+      }
+      flow.push(getById('platform_commission_rate_n'), getById('profit_margin_rate_n'));
+      return flow.filter(el => el && el.style.display !== 'none' && !el.disabled);
+    };
+
+    const attachEnterKeyListeners = () => {
+      const flowOrder = getFlowOrder();
+      flowOrder.forEach((elem, index) => {
+        if (elem._listenersAttached) return;
+        elem._listenersAttached = true;
+        
+        if (elem.type === 'text') {
+          const isProductNameInput = elem.id === 'productNameInput';
+            const debouncedCalculate = debounce(() => calculate(), 100);
+            elem.addEventListener('input', e => {
+              if (!isProductNameInput) {
+                const originalValue = e.target.value;
+                const restrictedValue = restrictToNumbers(originalValue);
+                if (originalValue !== restrictedValue) { e.target.value = restrictedValue; return; }
+              }
+              let value = e.target.value;
+              if (value.length > 1 && value[0] === '0' && /^[1-9]/.test(value[1])) {
+                e.target.value = value.substring(1);
+              }
+              if (elem.id === 'material_count') handleMaterialInput();
+              debouncedCalculate();
+              if (!isExcludedField(e.target.id)) {
+                lastChangedElement = e.target;
+              }
+              autoSaveInEditMode();
+            });
+            if (!isProductNameInput) {
+              elem.addEventListener('paste', e => {
+                e.preventDefault();
+                const paste = (e.clipboardData || window.clipboardData).getData('text');
+                const isValidNumber = /^[\d.]+$/.test(paste) && (paste.split('.').length <= 2);
+                if (!isValidNumber || !paste.trim()) return;
+                const start = e.target.selectionStart || 0;
+                const end = e.target.selectionEnd || 0;
+                const currentValue = e.target.value;
+                const beforeDecimal = currentValue.substring(0, start).includes('.');
+                const afterDecimal = currentValue.substring(end).includes('.');
+                const pasteHasDecimal = paste.includes('.');
+                if ((beforeDecimal || afterDecimal) && pasteHasDecimal) return;
+                const newValue = currentValue.substring(0, start) + paste + currentValue.substring(end);
+                e.target.value = restrictToNumbers(newValue);
+                const newCursorPos = start + paste.length;
+                setTimeout(() => e.target.setSelectionRange(newCursorPos, newCursorPos), 0);
+                e.target.dispatchEvent(new Event('input', { bubbles: true }));
+              });
+            }
+          elem.addEventListener('blur', e => {
+            setTimeout(() => {
+              let value = e.target.value.trim();
+              if (value === '') {
+                const initialValue = initialInputValues[e.target.id] || '';
+                e.target.value = initialValue;
+                calculate();
+                return;
+              }
+              if (value && !isNaN(parseFloat(value))) {
+                const isActualPrice = e.target.id === 'profit_margin_rate_n';
+                e.target.value = formatNumber(value, isActualPrice);
+              }
+              if (!isExcludedField(e.target.id)) {
+                lastChangedElement = e.target;
+              }
+              autoSaveInEditMode();
+            }, 10);
+          });
+          if (initialInputValues[elem.id] === undefined) {
+            initialInputValues[elem.id] = elem.value || '';
+          }
+          elem.addEventListener('focus', e => {
+            if (activeInputState.isRestoring) return;
+            if (e.target.value.trim() !== '') {
+              e.target.value = '';
+              const errorSpan = getById(elem.id + '_error');
+              const formulaErrorSpan = getById(elem.id + '_formula_error');
+              if (errorSpan) errorSpan.innerText = '';
+              if (formulaErrorSpan) formulaErrorSpan.innerText = '';
+              calculate();
+            }
+          });
+          elem.addEventListener('keydown', event => {
+            const isProductNameInput = elem.id === 'productNameInput';
+            if (!isProductNameInput && elem.type === 'text') {
+              const allowedKeys = [
+                'Backspace', 'Delete', 'Tab', 'Enter', 'Escape',
+                'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
+                'Home', 'End', 'Control', 'Meta', 'Alt'
+              ];
+              if (allowedKeys.includes(event.key)) {}
+              else if (/^\d$/.test(event.key) || event.key === '.') {
+                if (event.key === '.') {
+                  const currentValue = event.target.value;
+                  if (currentValue.includes('.')) {
+                    event.preventDefault();
+                    return;
+                  }
+                }
+              }
+              else if ((event.ctrlKey || event.metaKey) && ['a', 'c', 'v', 'x'].includes(event.key.toLowerCase())) {}
+              else {
+                event.preventDefault();
+                return;
+              }
+            }
+            
+            if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+              event.preventDefault();
+              event.stopPropagation();
+              let value = parseFloat(event.target.value) || 0;
+              value = Math.max(0, value + (event.key === 'ArrowUp' ? 1 : -1));
+              const dp = DECIMAL_PLACES[elem.id] ?? 0;
+              event.target.value = (elem.id === 'profit_margin_rate_n') ? Math.round(value).toString() : formatNumber(value.toFixed(dp));
+              calculate();
+              if (!isExcludedField(event.target.id)) lastChangedElement = event.target;
+              autoSaveInEditMode();
+              return;
+            }
+            
+            if (event.key === 'Enter') {
+              event.preventDefault();
+              if (elem.type === 'text') {
+                const formula = elem.value.trim();
+                if (!formula) {
+                  elem.value = '';
+                  setFormulaError(elem.id, '');
+                } else {
+                  const result = evaluateFormula(formula);
+                  if (!isNaN(result)) {
+                    elem.value = result;
+                    setFormulaError(elem.id, '');
+                  } else {
+                    setFormulaError(elem.id, '請輸入正確數值');
+                  }
+                }
+              }
+              calculate();
+              if (!isExcludedField(elem.id)) lastChangedElement = elem;
+              autoSaveInEditMode();
+              flowOrder[(index + 1) % flowOrder.length].focus();
+              return;
+            }
+            
+            if (event.key === 'Escape') {
+              const initialValue = initialInputValues[elem.id] || '';
+              elem.value = initialValue;
+              calculate();
+              elem.blur();
+              return;
+            }
+            if (event.key === 'Tab') {
+              const value = elem.value.trim();
+              if (value === '') {
+                elem.value = initialInputValues[elem.id] || '';
+                calculate();
+              } else {
+                if (!isExcludedField(elem.id)) lastChangedElement = elem;
+                autoSaveInEditMode();
+              }
+              return;
+            }
+            
+            if (event.key === 'Delete' && elem.type === 'text') {
+              event.preventDefault();
+              elem.value = '';
+              setFormulaError(elem.id, '');
+              calculate();
+              if (!isExcludedField(elem.id)) lastChangedElement = elem;
+              autoSaveInEditMode();
+            }
+          });
+        }
+      });
+    };
+
+    const handleMaterialInput = () => {
+      const n = parseFloat(getById('material_count').value) || 6;
+      const normal = document.querySelector('.material-normal');
+      const extra = document.querySelector('.material-extra');
+      if (n <= 6) { normal.classList.add('active'); extra.classList.remove('active'); } else { normal.classList.remove('active'); extra.classList.add('active'); }
+    };
+
+    const checkEditMode = async () => {
+      if (isEditMode()) {
+        const params = getUrlParams();
+        try {
+          const editData = JSON.parse(decodeURIComponent(params.get('data')));
+          getById('pageTitle').textContent = editData.name || '計算機';
+          const currencySelect = getById('price_currency');
+          currencySelect.value = editData.currency || 'CNY';
+          if (editData.priceUnit === 'total' && editData.originalTotalPrice) {
+            getById('price_unit').value = 'total';
+            getById('product_price').value = editData.originalTotalPrice;
+          } else {
+            getById('price_unit').value = 'unit';
+            const purchasePrice = editData.purchasePrice || editData.purchasePriceDisplay;
+            if (purchasePrice) getById('product_price').value = formatNumber(purchasePrice);
+          }
+          if (editData.quantity) getById('purchase_quantity').value = parseInt(editData.quantity);
+          if (editData.inlandShipping && parseFloat(editData.inlandShipping) > 0) {
+            getById('inland_shipping').value = formatNumber(editData.inlandShipping);
+            getById('shipping_included_yes').checked = true;
+          } else {
+            getById('shipping_included_no').checked = true;
+            getById('inland_shipping').value = '';
+          }
+          handleShippingMode();
+          getById('weight_mode').value = 'single';
+          if (editData.singleWeight) {
+            getById('weight_value').value = formatNumber(editData.singleWeight);
+          } else if (editData.totalWeight && editData.quantity) {
+            const totalWeightValue = parseFloat(editData.totalWeight);
+            const quantityValue = parseInt(editData.quantity);
+            const singleWeightValue = totalWeightValue / quantityValue;
+            getById('weight_value').value = formatNumber(singleWeightValue);
+            getById('weight_value').dataset.actualSingleWeight = singleWeightValue;
+          }
+          if (editData.materialCount) { getById('material_count').value = parseInt(editData.materialCount); handleMaterialInput(); }
+          await loadFirebaseSettings();
+          if (editData.actualPrice) getById('profit_margin_rate_n').value = formatNumber(editData.actualPrice, true);
+          document.body.classList.add('edit-mode');
+          handleCurrencyMode();
+          calculate();
+        } catch (e) {
+          alert('載入編輯數據時發生錯誤');
+        }
+      }
+    }
+
+    let originalTitle = '';
+    let isTitleEditing = false;
+    const pageTitle = getById('pageTitle');
+    
+    const setCursorPosition = (el, toEnd = false) => { const r = document.createRange(); const s = window.getSelection(); r.selectNodeContents(el); r.collapse(toEnd); s.removeAllRanges(); s.addRange(r); };
+
+    pageTitle.addEventListener('click', function(e) {
+      const isNTD = getById('price_currency').value === 'NTD';
+      
+      if (isNTD) {
+        window.location.reload();
+      } else if (!isTitleEditing) {
+        const currentText = this.textContent.trim();
+        const isEmptyOrDefault = currentText === '' || currentText === '商品名稱';
+        
+        originalTitle = this.textContent;
+        isTitleEditing = true;
+        
+        if (isEmptyOrDefault) {
+          this.innerHTML = '';
+          setCursorPosition(this, false);
+        } else {
+          setCursorPosition(this, true);
+        }
+      }
+    });
+
+    pageTitle.addEventListener('keydown', function(e) {
+      if (!isTitleEditing) return;
+
+      switch(e.key) {
+        case 'Enter':
+          e.preventDefault();
+          if (this.textContent.trim() === '') {
+            this.innerHTML = originalTitle;
+          }
+          isTitleEditing = false;
+          
+          if (isEditMode() && this.textContent.trim() !== originalTitle) {
+            lastChangedElement = this;
+            autoSaveInEditMode();
+          }
+          
+          this.blur();
+          break;
+        
+        case 'Delete':
+          e.preventDefault();
+          this.innerHTML = '';
+          setCursorPosition(this, false);
+          break;
+        
+        case 'Backspace':
+          break;
+      }
+    });
+
+    pageTitle.addEventListener('blur', function() {
+        if (isTitleEditing) {
+        if (this.textContent.trim() === '') this.innerHTML = originalTitle;
+        isTitleEditing = false;
+        if (isEditMode() && this.textContent.trim() !== originalTitle) {
+          lastChangedElement = this;
+          autoSaveInEditMode();
+        }
+      }
+    });
+
+
+
+    async function saveToFirestore() {
+      const currentTitle = getById('pageTitle').textContent.trim();
+      
+      if (isEditMode()) {
+        await confirmSave();
+      } else if (currentTitle === '商品名稱' || currentTitle === '') {
+        getById('nameModal').classList.add('show');
+        getById('productNameInput').value = '';
+        getById('productNameInput').focus();
+      } else {
+        await confirmSave();
+      }
+    }
+
+    function closeNameModal(forceClose = false) {
+      const inp = getById('productNameInput');
+      if (!forceClose && inp.value.trim() && inp.value.trim() !== getById('pageTitle').textContent && !confirm('您有未保存的更改，確定要關閉嗎？')) return;
+      getById('nameModal').classList.remove('show');
+      inp.value = '';
+    }
+
+    function showToast(msg, ok = true) { const t = getById('saveToast'); getById('toastMessage').textContent = msg; t.className = `toast ${ok ? 'success' : 'error'}`; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 1000); }
+    const handleSaveSuccess = (redirect = false) => { showToast('保存成功', true); if (redirect) setTimeout(() => window.location.href = 'Products.html', 1000); };
+    const updateDocAndNotify = async (docId, data, redirect = true) => {
+      try {
+        await db.collection('總表').doc(docId).update(data);
+        notifyParent({ type: 'updateProductName', productId: docId, newName: data.name });
+        handleSaveSuccess(redirect);
+        return true;
+      } catch (e) {
+        showToast('保存失敗', false);
+        return false;
+      }
+    };
+
+    async function confirmSave() {
+      try {
+        const currentTitle = getById('pageTitle').textContent.trim();
+        const currentData = buildCurrentData();
+        currentData.name = isEditMode() ? currentTitle : (currentTitle !== '商品名稱' ? currentTitle : getById('productNameInput').value.trim());
+
+        if (!isEditMode() && !currentData.name) {
+          showToast('請輸入商品名稱', false);
+          return;
+        }
+
+        if (isEditMode()) {
+          const params = getUrlParams();
+          const editData = JSON.parse(decodeURIComponent(params.get('data')));
+          const nameChanged = editData.name !== currentData.name;
+
+          if (nameChanged) {
+            const shouldUpdateDocId = confirm('商品名稱已變更，是否同時更新Firebase文檔ID以便管理？\n\n點選「確定」：更新文檔ID（推薦）\n點選「取消」：僅更新商品名稱');
+            if (shouldUpdateDocId) {
+              const newDocId = generateSafeDocumentId(currentData.name);
+              try {
+                await db.collection('總表').doc(newDocId).set(currentData);
+                await db.collection('總表').doc(editData.id).delete();
+                notifyParent({ type: 'updateProductId', oldId: editData.id, newId: newDocId, product: currentData });
+                handleSaveSuccess(true);
+              } catch (err) {
+                await updateDocAndNotify(editData.id, currentData);
+              }
+            } else {
+              await updateDocAndNotify(editData.id, currentData);
+            }
+          } else {
+            await updateDocAndNotify(editData.id, currentData);
+          }
+        } else {
+          const safeDocId = generateSafeDocumentId(currentData.name);
+          try {
+            await db.collection('總表').doc(safeDocId).set(currentData);
+            notifyParent({ type: 'addNewProduct', product: { id: safeDocId, ...currentData } });
+            handleSaveSuccess();
+          } catch (e) {
+            try {
+              const timestampedId = `${safeDocId}_${Date.now()}`;
+              await db.collection('總表').doc(timestampedId).set(currentData);
+              notifyParent({ type: 'addNewProduct', product: { id: timestampedId, ...currentData } });
+              handleSaveSuccess();
+            } catch {
+              showToast('保存失敗', false);
+              return;
+            }
+          }
+          getById('pageTitle').textContent = '商品名稱';
+          ['product_price', 'purchase_quantity', 'inland_shipping', 'weight_value', 'material_count', 'profit_margin_rate_n'].forEach(id => {
+            const el = getById(id);
+            if (el) el.value = '';
+          });
+          calculate();
+        }
+        closeNameModal(true);
+      } catch (error) {
+        showToast('保存失敗', false);
+      }
+    }
+
+    function generateSafeDocumentId(name) {
+      if (!name || !name.trim()) return `product_${Date.now()}`;
+      let id = name.trim().replace(/[\/\\\[\]{}()*+?.,^$|#\s]/g, '_').replace(/_+/g, '_').replace(/^_+|_+$/g, '');
+      return (!id || id.length > 100) ? (id ? id.substring(0, 100) : `product_${Date.now()}`) : id;
+    }
+    function viewInProducts() { window.location.href = 'Products.html'; }
+
+    document.addEventListener('visibilitychange', () => document.hidden ? saveInputState() : restoreInputState());
+    window.addEventListener('blur', () => saveInputState());
+    window.addEventListener('focus', () => setTimeout(restoreInputState, 100));
+  </script>
+</body>
+</html>

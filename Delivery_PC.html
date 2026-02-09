@@ -1,0 +1,381 @@
+<div class="cyber-panel">
+    <h1 class="page-title">📦 外送資產訂購單</h1>
+    <div id="date-picker">
+        <label class="date-label">選擇日期：</label>
+        <span id="date-display"></span>
+        <button id="reset-date-button">今天</button>
+        <div id="date-modal">
+            <div class="calendar-header">
+                <button class="calendar-nav-btn" id="prev-month">‹</button>
+                <div class="calendar-month-year">
+                    <select id="year-select"></select>
+                    <select id="month-select"></select>
+                </div>
+                <button class="calendar-nav-btn" id="next-month">›</button>
+            </div>
+            <div class="calendar-weekdays">
+                <div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div>
+            </div>
+            <div class="calendar-days" id="calendar-days"></div>
+        </div>
+    </div>
+
+    <div id="categories-container"></div>
+
+    <div class="category-section">
+        <div class="category-title">採購計算</div>
+        <div id="hud-display"></div>
+    </div>
+
+    <div class="category-section">
+        <div class="category-title">採購成本</div>
+        <div id="cost-display" class="no-copy"></div>
+        <div id="cost-summary" class="cost-summary no-copy">
+            <div class="cost-total-row">
+                <span class="cost-total">總成本: <span id="total-cost-amount">0</span> 元</span>
+                <input type="text" id="cost-note-input" class="cost-note-input">
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    :root {
+        --space-blue: #1a1a2e;
+        --neon-cyan: #00f3ff;
+        --cyber-purple: #712f79;
+        --ease: cubic-bezier(0.4, 0, 0.2, 1);
+        --transition: 0.3s var(--ease);
+        --transition-fast: 0.2s var(--ease);
+        --bg-dark: rgba(0,0,0,0.3);
+        --bg-display: rgba(0,0,0,0.5);
+        --bg-modal: linear-gradient(135deg, rgba(26,26,46,0.95), rgba(0,0,0,0.95));
+        --bg-btn: linear-gradient(135deg, rgba(0,0,0,0.4), rgba(26,26,46,0.6));
+        --bg-btn-hover: linear-gradient(135deg, rgba(0,243,255,0.1), rgba(26,26,46,0.8));
+        --bg-day: linear-gradient(135deg, rgba(0,0,0,0.3), rgba(26,26,46,0.5));
+        --bg-day-today: linear-gradient(135deg, rgba(113,47,121,0.2), rgba(0,243,255,0.1));
+        --bg-day-selected: linear-gradient(135deg, rgba(0,243,255,0.3), rgba(113,47,121,0.2));
+        --shadow-cyan: rgba(0,243,255,0.3);
+        --shadow-purple: rgba(113,47,121,0.4);
+        --shadow-sm: 0 0 10px var(--shadow-cyan);
+        --shadow-md: 0 2px 8px var(--shadow-cyan);
+        --shadow-lg: 0 4px 12px var(--shadow-cyan);
+        --shadow-xl: 0 8px 32px var(--shadow-cyan);
+        --shadow-dark: 0 2px 8px rgba(0,0,0,0.3);
+        --radius-sm: 6px;
+        --radius-md: 8px;
+        --radius-lg: 12px;
+        --radius-xl: 16px;
+        --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2300f3ff' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    }
+    body { background: #0a0a1a; margin: 0; padding: 20px; min-height: 100vh; display: flex; justify-content: center; align-items: flex-start; }
+    .cyber-panel { background: var(--space-blue); color: var(--neon-cyan); border: 2px solid var(--neon-cyan); border-radius: var(--radius-xl); padding: 2rem; width: 100%; max-width: none; box-shadow: 0 0 30px rgba(0,243,255,0.2); box-sizing: border-box; }
+    .page-title { text-align: center; margin-bottom: 2rem; }
+    .date-label { color: var(--neon-cyan); margin-right: 10px; }
+    .category-section { margin-bottom: 2rem; }
+    .category-title { color: var(--neon-cyan); font-size: 1.5rem; margin-bottom: 1rem; border-bottom: 1px solid var(--cyber-purple); padding-bottom: 0.5rem; }
+    .grid-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; padding: 1rem 0; }
+    .cyber-input { background: var(--bg-dark); border: 1px solid var(--cyber-purple); border-radius: var(--radius-md); padding: 1rem; transition: all var(--transition); display: flex; align-items: center; justify-content: space-between; }
+    .cyber-input:hover { transform: translateY(-3px); box-shadow: 0 5px 15px var(--shadow-purple); }
+    input[type="number"] { width: 120px; padding: 0.8rem; background: transparent; border: 1px solid var(--neon-cyan); border-radius: var(--radius-sm); color: var(--neon-cyan); font-size: 1.1rem; text-align: center; transition: border-color var(--transition); -moz-appearance: textfield; appearance: textfield; }
+    input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; appearance: none; margin: 0; }
+    input[type="number"]:focus, .cost-note-input:focus { border-color: var(--cyber-purple); outline: none; }
+    .no-copy { cursor: default; }
+    #hud-display, #cost-display, .cost-summary { background: var(--bg-display); border: 3px solid var(--neon-cyan); border-radius: var(--radius-lg); margin-top: 1rem; backdrop-filter: blur(10px); transition: border-color var(--transition); }
+    #hud-display, #cost-display { padding: 2rem; text-align: left; }
+    #hud-display { cursor: pointer; }
+    #hud-display:hover { border-color: var(--cyber-purple); }
+    #hud-display p, #cost-display p { margin: 5px 0; font-size: 1.2rem; color: var(--neon-cyan); }
+    .cost-summary { padding: 1.5rem 2rem; display: none; }
+    .cost-total-row { display: flex; justify-content: space-between; align-items: center; }
+    .cost-total { font-weight: bold; color: var(--neon-cyan); font-size: 1.4rem; }
+    .cost-note-input { width: 180px; padding: 0.6rem; background: var(--bg-dark); border: 1px solid var(--neon-cyan); border-radius: var(--radius-sm); color: var(--neon-cyan); font-size: 1rem; text-align: center; transition: all var(--transition); }
+    .cost-note-input:focus { box-shadow: var(--shadow-sm); }
+    .cost-note-input::placeholder { color: rgba(0,243,255,0.5); }
+    #date-picker { text-align: center; margin-bottom: 1rem; position: relative; }
+    #date-display { background: transparent; border: 1px solid var(--neon-cyan); color: var(--neon-cyan); padding: 0.5rem 1rem; border-radius: var(--radius-sm); cursor: pointer; display: inline-block; margin-left: 10px; transition: box-shadow var(--transition); }
+    #date-display:hover { box-shadow: var(--shadow-sm); }
+    #date-modal { display: none; position: absolute; top: calc(100% + 10px); left: 50%; transform: translateX(-50%); background: var(--bg-modal); border: 2px solid var(--neon-cyan); border-radius: var(--radius-lg); padding: 1.5rem; z-index: 10; box-shadow: var(--shadow-xl), 0 0 0 1px rgba(0,243,255,0.1); backdrop-filter: blur(10px); min-width: 320px; animation: modalFadeIn var(--transition) var(--ease); }
+    @keyframes modalFadeIn { from { opacity: 0; transform: translateX(-50%) translateY(-10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+    #date-modal::before { content: ''; position: absolute; inset: -2px; background: linear-gradient(45deg, var(--neon-cyan), var(--cyber-purple), var(--neon-cyan)); border-radius: var(--radius-lg); z-index: -1; opacity: 0.3; animation: borderGlow 3s ease-in-out infinite; }
+    @keyframes borderGlow { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.6; } }
+    .calendar-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; gap: 0.5rem; }
+    .calendar-nav-btn { background: var(--bg-btn); border: 2px solid var(--cyber-purple); color: var(--neon-cyan); width: 40px; height: 40px; border-radius: var(--radius-md); cursor: pointer; font-size: 1.5rem; font-weight: bold; display: flex; align-items: center; justify-content: center; transition: all var(--transition); box-shadow: var(--shadow-dark); }
+    .calendar-nav-btn:hover { border-color: var(--neon-cyan); box-shadow: var(--shadow-lg); transform: translateY(-2px); background: var(--bg-btn-hover); }
+    .calendar-nav-btn:active { transform: translateY(0); }
+    .calendar-month-year { display: flex; gap: 0.5rem; flex: 1; justify-content: center; }
+    #date-modal select { background-color: rgba(0,0,0,0.4); background-image: var(--bg-btn), var(--select-arrow); background-repeat: no-repeat, no-repeat; background-position: center, right 0.8rem center; background-size: 100% 100%, 12px; border: 2px solid var(--cyber-purple); color: var(--neon-cyan); padding: 0.5rem 2.5rem 0.5rem 1rem; border-radius: var(--radius-md); font-size: 1rem; font-weight: 500; cursor: pointer; transition: all var(--transition); appearance: none; box-shadow: var(--shadow-dark); flex: 1; }
+    #date-modal select:hover { border-color: var(--neon-cyan); box-shadow: var(--shadow-lg); transform: translateY(-2px); background-image: var(--bg-btn-hover), var(--select-arrow); }
+    #date-modal select:focus { outline: none; border-color: var(--neon-cyan); box-shadow: 0 0 0 3px rgba(0,243,255,0.2), var(--shadow-lg); }
+    #date-modal select option { background: var(--space-blue); color: var(--neon-cyan); padding: 0.5rem; }
+    .calendar-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.5rem; margin-bottom: 0.5rem; }
+    .calendar-weekdays div { text-align: center; font-weight: 600; color: var(--neon-cyan); font-size: 0.95rem; padding: 0.5rem 0; }
+    .calendar-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.5rem; }
+    .calendar-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; background: var(--bg-day); border: 2px solid transparent; border-radius: var(--radius-md); color: var(--neon-cyan); cursor: pointer; font-weight: 500; transition: all var(--transition-fast); position: relative; overflow: hidden; min-height: 40px; }
+    .calendar-day::before { content: ''; position: absolute; inset: 50%; width: 0; height: 0; border-radius: 50%; background: rgba(0,243,255,0.2); transform: translate(-50%, -50%); transition: width 0.3s, height 0.3s; }
+    .calendar-day:hover { border-color: var(--neon-cyan); box-shadow: var(--shadow-md); transform: scale(1.05); z-index: 1; }
+    .calendar-day:hover::before, .calendar-day.selected::before { inset: 0; width: 100%; height: 100%; }
+    .calendar-day.other-month { color: rgba(0,243,255,0.3); background: rgba(0,0,0,0.1); }
+    .calendar-day.today { border-color: var(--cyber-purple); background: var(--bg-day-today); font-weight: 700; box-shadow: 0 0 8px var(--shadow-purple); }
+    .calendar-day.selected { border-color: var(--neon-cyan); background: var(--bg-day-selected); font-weight: 700; box-shadow: 0 0 12px var(--shadow-cyan); transform: scale(1.1); z-index: 2; }
+    .calendar-day.selected::before { background: rgba(0,243,255,0.1); }
+    #reset-date-button { margin-left: 10px; padding: 5px 10px; background: var(--cyber-purple); border: 1px solid var(--neon-cyan); border-radius: var(--radius-sm); color: var(--neon-cyan); cursor: pointer; transition: all var(--transition); }
+    #reset-date-button:hover { background: var(--neon-cyan); color: var(--space-blue); }
+    .toast-notification { position: fixed; top: 20px; right: 20px; background: var(--bg-modal); border: 2px solid var(--neon-cyan); border-radius: var(--radius-lg); padding: 1rem 2rem; color: var(--neon-cyan); font-size: 1.1rem; z-index: 1000; box-shadow: var(--shadow-xl), 0 0 0 1px rgba(0,243,255,0.1); backdrop-filter: blur(10px); animation: toastSlideIn var(--transition) var(--ease), toastFadeOut var(--transition) var(--ease) 2.7s forwards; pointer-events: none; }
+    @keyframes toastSlideIn { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes toastFadeOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(100%); } }
+</style>
+
+<script>
+    const CONFIG = {
+        categories: [
+            {
+                name: 'UberEats',
+                items: [
+                    { label: 'UberEats提袋', name: 'ubereats_bag' },
+                    { label: 'UberEats六格箱', name: 'ubereats_6grid' },
+                    { label: 'UberEats八格箱', name: 'ubereats_8grid' }
+                ]
+            },
+            {
+                name: 'FoodPanda',
+                items: [
+                    { label: 'FoodPanda提袋', name: 'foodpanda_bag' },
+                    { label: 'FoodPanda六格箱', name: 'foodpanda_6grid' },
+                    { label: 'FoodPanda八格箱', name: 'foodpanda_8grid' },
+                    { label: 'FoodPanda 2022六格箱', name: 'foodpanda_2022_6grid' },
+                    { label: 'FoodPanda 2022八格箱', name: 'foodpanda_2022_8grid' },
+                    { label: 'FoodPanda魔鬼氈保溫箱', name: 'foodpanda_velcro_insulated' },
+                    { label: 'FoodPanda磁吸保溫箱', name: 'foodpanda_magnetic_insulated' },
+                    { label: 'FoodPanda上掀款保溫箱', name: 'foodpanda_flip_insulated' }
+                ]
+            }
+        ],
+        limits: {
+            ubereats_bag: 50, ubereats_6grid: 15, ubereats_8grid: 13,
+            foodpanda_bag: 80, foodpanda_6grid: 15, foodpanda_8grid: 13,
+            foodpanda_2022_6grid: 15, foodpanda_2022_8grid: 13,
+            foodpanda_velcro_insulated: 10, foodpanda_magnetic_insulated: 10,
+            foodpanda_flip_insulated: 6
+        },
+        unitPrices: {
+            ubereats_bag: 10, foodpanda_bag: 13,
+            ubereats_6grid: 65, ubereats_8grid: 70,
+            foodpanda_6grid: 65, foodpanda_8grid: 70,
+            foodpanda_2022_6grid: 65, foodpanda_2022_8grid: 70,
+            foodpanda_velcro_insulated: 135, foodpanda_magnetic_insulated: 135,
+            foodpanda_flip_insulated: 170
+        },
+        dateRange: { minYear: 2025, maxYear: 2054 }
+    };
+
+    const utils = {
+        padZero: num => String(num).padStart(2, '0'),
+        getDaysInMonth: (year, month) => new Date(year, month, 0).getDate(),
+        formatNumber: num => num.toLocaleString(),
+        setCursorEnd: input => requestAnimationFrame(() => {
+            const len = input.value.length;
+            input.setSelectionRange(len, len);
+        })
+    };
+
+    const expressionParser = {
+        evaluate(expr) {
+            const trimmed = String(expr || '').trim();
+            if (!trimmed) return '';
+            if (trimmed === '0') return '0';
+            try {
+                const tokens = (trimmed.match(/(\d+|[+\-*/])/g) || []).map(t => /\d+/.test(t) ? +t : t);
+                if (!tokens.length) return '';
+                const ops = { '+': (a, b) => a + b, '-': (a, b) => a - b, '*': (a, b) => a * b, '/': (a, b) => Math.floor(a / b) };
+                let stack = [], op = '+';
+                for (const token of tokens) {
+                    if (typeof token === 'number') stack.push(op === '+' ? token : op === '-' ? -token : ops[op](stack.pop(), token));
+                    else op = token;
+                }
+                const result = Math.max(0, Math.round(stack.reduce((a, b) => a + b, 0)));
+                return result ? String(result) : '';
+            } catch { return ''; }
+        }
+    };
+
+    const dateManager = {
+        state: { year: 2025, month: new Date().getMonth() + 1, day: new Date().getDate() },
+        elements: null,
+        init() {
+            const ids = ['date-display', 'date-modal', 'year-select', 'month-select', 'calendar-days', 'prev-month', 'next-month', 'reset-date-button'];
+            const keys = ['display', 'modal', 'yearSelect', 'monthSelect', 'calendarDays', 'prevMonthBtn', 'nextMonthBtn', 'resetBtn'];
+            this.elements = Object.fromEntries(keys.map((k, i) => [k, document.getElementById(ids[i])]));
+            this.bindEvents();
+            this.render();
+        },
+        render() {
+            const { year, month, day } = this.state;
+            this.elements.display.textContent = `${year}/${utils.padZero(month)}/${utils.padZero(day)}`;
+            this.populateSelect(this.elements.yearSelect, CONFIG.dateRange.minYear, CONFIG.dateRange.maxYear, year, false);
+            this.populateSelect(this.elements.monthSelect, 1, 12, month, true);
+            this.renderCalendar();
+            calculateResult();
+        },
+        populateSelect(select, start, end, selected, pad) {
+            select.innerHTML = '';
+            for (let i = start; i <= end; i++) select.add(new Option(pad ? utils.padZero(i) : String(i), i, i === selected));
+        },
+        getAdjacentMonth(offset) {
+            let m = this.state.month + offset, y = this.state.year;
+            if (m < 1) { m = 12; y--; } else if (m > 12) { m = 1; y++; }
+            return { year: y, month: m, days: utils.getDaysInMonth(y, m) };
+        },
+        renderCalendar() {
+            const today = new Date();
+            const { year, month, day } = this.state;
+            const firstDay = new Date(year, month - 1, 1).getDay();
+            const daysInMonth = utils.getDaysInMonth(year, month);
+            const todayDate = { y: today.getFullYear(), m: today.getMonth() + 1, d: today.getDate() };
+            const isToday = d => todayDate.y === year && todayDate.m === month && todayDate.d === d;
+            const el = this.elements.calendarDays;
+            el.innerHTML = '';
+            const prev = this.getAdjacentMonth(-1);
+            for (let i = firstDay - 1; i >= 0; i--) el.appendChild(this.createDay(prev.days - i, true, prev.year, prev.month));
+            for (let d = 1; d <= daysInMonth; d++) el.appendChild(this.createDay(d, false, year, month, isToday(d), day === d));
+            const next = this.getAdjacentMonth(1);
+            for (let d = 1, left = 42 - el.children.length; d <= left; d++) el.appendChild(this.createDay(d, true, next.year, next.month));
+        },
+        createDay(dayNum, isOtherMonth, year, month, isToday = false, isSelected = false) {
+            const el = document.createElement('div');
+            el.className = ['calendar-day', isOtherMonth && 'other-month', isToday && 'today', isSelected && 'selected'].filter(Boolean).join(' ');
+            el.textContent = dayNum;
+            el.onclick = () => { Object.assign(this.state, { year, month, day: dayNum }); this.elements.modal.style.display = 'none'; this.render(); };
+            return el;
+        },
+        resetToToday() {
+            const t = new Date();
+            Object.assign(this.state, { year: Math.max(CONFIG.dateRange.minYear, t.getFullYear()), month: t.getMonth() + 1, day: t.getDate() });
+            this.render();
+        },
+        adjustDay() { const max = utils.getDaysInMonth(this.state.year, this.state.month); if (this.state.day > max) this.state.day = max; },
+        changeMonth(delta) {
+            this.state.month += delta;
+            if (this.state.month > 12) { this.state.month = 1; this.state.year++; } else if (this.state.month < 1) { this.state.month = 12; this.state.year--; }
+            this.adjustDay();
+            this.render();
+        },
+        toggleModal() { this.elements.modal.style.display = this.elements.modal.style.display === 'block' ? 'none' : 'block'; },
+        bindEvents() {
+            const { display, modal, resetBtn, yearSelect, monthSelect, prevMonthBtn, nextMonthBtn } = this.elements;
+            display.onclick = () => this.toggleModal();
+            resetBtn.onclick = () => this.resetToToday();
+            prevMonthBtn.onclick = () => this.changeMonth(-1);
+            nextMonthBtn.onclick = () => this.changeMonth(1);
+            const onSelect = (prop, e) => { this.state[prop] = +e.target.value; this.adjustDay(); this.render(); };
+            yearSelect.onchange = e => onSelect('year', e);
+            monthSelect.onchange = e => onSelect('month', e);
+            document.addEventListener('click', e => { if (!modal.contains(e.target) && !display.contains(e.target) && !resetBtn.contains(e.target)) modal.style.display = 'none'; }, true);
+        }
+    };
+
+    const inputManager = {
+        inputs: [],
+        previousValues: {},
+        currentInput: null,
+        isFirstLoad: true,
+        deleteTimers: {},
+        commitInput(input) {
+            if (!input) return;
+            const newVal = expressionParser.evaluate(input.value);
+            const prev = +this.previousValues[input.name] || 0;
+            input.value = (!this.isFirstLoad && prev && newVal) ? String(prev + (+newVal || 0)) : newVal;
+            this.previousValues[input.name] = input.value;
+            calculateResult();
+        },
+        handleDelete(input) {
+            if (this.deleteTimers[input.name]) clearTimeout(this.deleteTimers[input.name]);
+            const count = (+input.dataset.deleteCount || 0) + 1;
+            input.dataset.deleteCount = count;
+            this.deleteTimers[input.name] = setTimeout(() => { input.dataset.deleteCount = 0; }, 500);
+            input.value = '';
+            if (count === 2) this.previousValues[input.name] = 0;
+            calculateResult();
+        },
+        init() {
+            this.inputs = Array.from(document.querySelectorAll('input[type="number"]')).filter(i => i.id !== 'cost-note-input');
+            this.inputs.forEach((input, idx) => {
+                this.previousValues[input.name] = 0;
+                input.onfocus = () => { this.currentInput = input; if (!this.isFirstLoad) input.value = ''; };
+                input.onblur = () => { this.commitInput(input); this.currentInput = null; this.isFirstLoad = false; };
+                input.onclick = () => { const v = expressionParser.evaluate(input.value); if (input.value !== v) { input.value = v; calculateResult(); } utils.setCursorEnd(input); };
+                input.onkeydown = e => {
+                    if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); this.handleDelete(input); }
+                    else if (e.key === 'Enter') { this.commitInput(input); const next = this.inputs[(idx + 1) % this.inputs.length]; next.focus(); utils.setCursorEnd(next); }
+                };
+            });
+            window.onblur = () => { if (this.currentInput) this.commitInput(this.currentInput); };
+        }
+    };
+
+    const getInputLabel = el => el.parentElement.textContent.trim().replace(/\s*<input[^>]*>$/i, '');
+    const resultManager = {
+        elements: null,
+        currentTotalCost: 0,
+        init() {
+            const ids = ['hud-display', 'cost-display', 'cost-summary', 'cost-note-input', 'total-cost-amount'];
+            const keys = ['hudDisplay', 'costDisplay', 'costSummary', 'exchangeRateInput', 'totalCostElement'];
+            this.elements = Object.fromEntries(keys.map((k, i) => [k, document.getElementById(ids[i])]));
+            const { hudDisplay, exchangeRateInput } = this.elements;
+            hudDisplay.onclick = () => { const text = Array.from(hudDisplay.querySelectorAll('p'), p => p.textContent).join('\n'); navigator.clipboard.writeText(text).then(() => this.showToast('複製成功')).catch(() => this.showToast('複製失敗')); };
+            exchangeRateInput.oninput = () => this.updateExchangeRate();
+        },
+        update() {
+            if (!this.elements || !inputManager.inputs.length) return;
+            const { year, month, day } = dateManager.state;
+            const formattedDate = `${year}/${utils.padZero(month)}/${utils.padZero(day)}訂單`;
+            const allItems = inputManager.inputs.reduce((items, input) => {
+                const value = +input.value || 0;
+                if (value <= 0) return items;
+                const name = input.name, limit = CONFIG.limits[name] || 1, boxes = Math.ceil(value / limit);
+                items.push({ label: getInputLabel(input), count: value, boxes, excess: boxes * limit - value, cost: value * (CONFIG.unitPrices[name] || 0) });
+                return items;
+            }, []);
+            this.currentTotalCost = allItems.reduce((s, i) => s + i.cost, 0);
+            this.elements.hudDisplay.innerHTML = `<p>${formattedDate}</p>` + allItems.map(i => `<p>${i.label} ×${i.boxes}${i.excess > 0 ? ` 【餘${i.excess}件】` : ''}</p>`).join('');
+            const costItems = allItems.filter(i => i.cost > 0);
+            this.elements.costDisplay.innerHTML = `<p>${formattedDate}</p>` + (costItems.length ? costItems.map(i => `<p>${i.label} * ${i.count} = ${utils.formatNumber(i.cost)} 元</p>`).join('') : '<p>尚無成本資料</p>');
+            this.elements.costSummary.style.display = costItems.length ? 'block' : 'none';
+            this.updateExchangeRate();
+        },
+        updateExchangeRate() {
+            const rate = +this.elements.exchangeRateInput.value;
+            this.elements.totalCostElement.textContent = utils.formatNumber((rate && !isNaN(rate) && this.currentTotalCost > 0) ? this.currentTotalCost * rate : this.currentTotalCost);
+        },
+        showToast(message) {
+            document.querySelector('.toast-notification')?.remove();
+            const toast = document.createElement('div');
+            toast.className = 'toast-notification';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+    };
+
+    const initHTML = () => {
+        document.getElementById('categories-container').innerHTML = CONFIG.categories.map(cat => `
+            <div class="category-section">
+                <div class="category-title">${cat.name}</div>
+                <div class="grid-container" data-category="${cat.name.toLowerCase()}">
+                    ${cat.items.map(item => `<div class="cyber-input">${item.label} <input type="number" name="${item.name}" value="" min="0" step="1"></div>`).join('')}
+                </div>
+            </div>
+        `).join('');
+    };
+
+    const calculateResult = () => resultManager.update();
+
+    function run() {
+        initHTML();
+        dateManager.init();
+        inputManager.init();
+        resultManager.init();
+        resultManager.update();
+    }
+    document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', run) : run();
+</script>
