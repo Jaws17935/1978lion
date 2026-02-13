@@ -57,7 +57,7 @@
         (function(){
             const _xr=(a,m)=>a.map(c=>String.fromCharCode(c^m)).join(''),_p=[[[0x83,0x8B,0x84,0x8B],(~0x4C&-1)&0xFF],[[0x65,0x6D,0x62,0x6D],~0xAA&0xFF],[[0x12,0x1A,0x15,0x1A],0x11<<1],[[0xAA,0xA2,0xAD,0xA2],~0x65&0xFF],[[0x4F,0x47,0x48,0x47],0xFF>>1],[[0xE1,0xE9,0xE6,0xE9],~0x2E&0xFF],[[0x03,0x0B,0x04,0x0B],0x66>>1],[[0xF4,0xFC,0xF3,0xFC],~0x3B&0xFF],[[0x27,0x2F,0x20,0x2F],0x2E>>1],[[0xDE,0xD6,0xD9,0xD6],~0x11&0xFF]],_r=_p[0|Math.random()*_p.length],_k=_xr(_r[0],_r[1]);
             const Cfg={T:1e3,W:9e5,Taipei:[25.033,121.5654],API:'https://api.open-meteo.com/v1/forecast',POPUP:'width=1024,height=768,scrollbars=yes,resizable=yes,menubar=yes'};
-            const CARDS=[{icon:'💰',title:'損益計算機',url:'Products.html',locked:true},{icon:'📋',title:'商品銷售報價單',url:'Blank_Quotation.html',locked:false},{icon:'🔍',title:'商品競價工具',url:'Price_tools.html',locked:false},{icon:'📝',title:'外送資產【手機版】',url:'Delivery_Mobile.html',locked:true},{icon:'🖥️',title:'外送資產【電腦版】',url:'Delivery_PC.html',locked:true},{icon:'🚛',title:'運輸計算機',url:'Transport.html',locked:true},{icon:'📑',title:'9Starx報價單',url:'9Starx_Quotation.html',locked:true},{icon:'📈',title:'大草原計算機',url:'CNY.html',locked:true},{icon:'💳',title:'信用卡計算機',url:'Credit_Card.html',locked:true}];
+            const CARDS=[{icon:'💰',title:'損益計算機',url:'Products.html',locked:true},{icon:'📋',title:'商品銷售報價單',url:'Blank_Quotation.html',locked:false},{icon:'🔍',title:'商品競價工具',url:'Price_tools.html',locked:false},{icon:'🖥️',title:'外送資產【電腦版】',url:'Delivery_PC.html',locked:true},{icon:'🚛',title:'運輸計算機',url:'Transport.html',locked:true},{icon:'📑',title:'9Starx報價單',url:'9Starx_Quotation.html',locked:true},{icon:'📈',title:'大草原計算機',url:'CNY.html',locked:true},{icon:'💳',title:'信用卡計算機',url:'Credit_Card.html',locked:true},{icon:'💱',title:'匯率計算機',url:'Exchange_Calculator.html',locked:true}];
             const $=id=>document.getElementById(id);
             let els={};
             const closeModal=(m,fn)=>{fn&&document.removeEventListener('keydown',fn);m.classList.remove('active');setTimeout(()=>m.remove(),300)};
@@ -66,7 +66,7 @@
                 const onEsc=e=>e.key==='Escape'&&closeModal(m,onEsc);
                 m.onclick=e=>e.target===m&&closeModal(m,onEsc);
                 const inp=document.createElement('input');inp.type='password';inp.className='password-input';inp.maxLength=_k.length;
-                inp.oninput=()=>{if(inp.value.length!==_k.length)return;if(inp.value===_k){document.removeEventListener('keydown',onEsc);window.open(url,'_blank',Cfg.POPUP)}closeModal(m,onEsc)};
+                inp.oninput=()=>{if(inp.value.length!==_k.length)return;if(inp.value===_k){document.removeEventListener('keydown',onEsc);window.open(url,'_blank',Cfg.POPUP);closeModal(m,onEsc)}};
                 const box=document.createElement('div');box.className='password-box';box.append(inp);m.append(box);
                 document.body.append(m);document.addEventListener('keydown',onEsc);inp.focus();
             }

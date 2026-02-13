@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>實匯計算機</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap');
+        :root {
+            --bg: linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);
+            --card-bg: rgba(255,255,255,.08);
+            --input-bg: rgba(0,0,0,.2);
+            --border: 1px solid rgba(255,255,255,.2);
+            --accent: #e94560;
+            --muted: #a0a0a0;
+            --rad: 8px;
+            --gap: .5rem;
+            --row-border: 1px solid rgba(255,255,255,.08);
+        }
+        *,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0 }
+        body { font-family: 'Noto Sans TC', sans-serif; background: var(--bg); min-height: 100vh; padding: 2rem; color: #e8e8e8 }
+        .container { max-width: 480px; margin: 0 auto }
+        h1 { text-align: center; margin-bottom: 1.5rem; font-size: 1.5rem; font-weight: 600; color: #fff }
+        .card { background: var(--card-bg); border-radius: 16px; padding: 1.5rem; margin-bottom: 1.5rem; border: 1px solid rgba(255,255,255,.1) }
+        .input-group { margin-bottom: 1rem }
+        .input-group:last-child { margin-bottom: 0 }
+        label { display: block; font-size: .85rem; color: var(--muted); margin-bottom: .4rem }
+        input { width: 100%; padding: .75rem 1rem; font-size: 1.1rem; border: var(--border); border-radius: var(--rad); background: var(--input-bg); color: #fff }
+        input:focus { outline: 0; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(233,69,96,.3) }
+        input[type="number"] { -moz-appearance: textfield; appearance: textfield }
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0 }
+        .result-row { display: flex; justify-content: space-between; align-items: center; padding: .75rem 0; border-bottom: var(--row-border) }
+        .result-row:last-child { border-bottom: 0 }
+        .result-label, .result-table .amount { font-size: .9rem; color: var(--muted) }
+        .effective-rate, .result-table .erate { color: var(--accent); font-weight: 600 }
+        .total-cost, .result-table .cost { color: #7ee8fa; font-size: .9rem }
+        .result-table { width: 100%; border-collapse: collapse; font-size: .9rem }
+        .result-table th, .result-table td { padding: .5rem; text-align: right; border-bottom: var(--row-border) }
+        .result-table th:first-child, .result-table td:first-child { text-align: left }
+        .result-custom { margin-top: 1rem; padding: .75rem; background: rgba(233,69,96,.15); border-radius: var(--rad); border-left: 4px solid var(--accent) }
+        .rate-row { display: flex; gap: var(--gap); align-items: center }
+        .rate-row input { flex: 1 }
+        .btn-fetch { display: inline-block; padding: .75rem 1rem; font-size: .9rem; font-family: inherit; background: var(--accent); color: #fff; border: 0; border-radius: var(--rad); cursor: pointer; white-space: nowrap; text-decoration: none }
+        .btn-fetch:hover { background: #ff6b6b }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>實匯計算機</h1>
+        
+        <div class="card">
+            <div class="input-group">
+                <label for="rate">今日匯率</label>
+                <div class="rate-row">
+                    <input type="text" id="rate" inputmode="decimal" autocomplete="off">
+                    <a href="https://rate.bot.com.tw/xrt?Lang=zh-TW" class="btn-fetch" id="btn-bot">台灣銀行</a>
+                </div>
+            </div>
+            <div class="input-group">
+                <label for="amount">換匯金額</label>
+                <input type="text" id="amount" inputmode="numeric" autocomplete="off">
+            </div>
+            <div class="input-group">
+                <label for="fee">換匯手續費</label>
+                <input type="text" id="fee" inputmode="numeric" autocomplete="off" value="400">
+            </div>
+        </div>
+        
+        <div class="card" id="result-card">
+            <div id="result-preset">
+                <table class="result-table"><thead><tr><th>金額</th><th>實質匯率</th><th>總計金額</th></tr></thead><tbody id="preset-tbody"></tbody></table>
+            </div>
+            <div id="result-custom" class="result-custom" style="display:none">
+                <div class="result-row"><span class="result-label">實質匯率</span><span class="effective-rate" id="effective-rate">--</span></div>
+                <div class="result-row"><span class="result-label">總計金額</span><span class="total-cost" id="total-cost">--</span></div>
+            </div>
+        </div>
+        
+    </div>
+
+    <script>
+        (function () {
+            const $ = id => document.getElementById(id);
+            const parseAmount = v => parseFloat(String(v).replace(/,/g, '')) || 0;
+            const stripZeros = v => (!v || v === '0') ? v : v.replace(/^0+(?=0*\.\d)/, '0').replace(/^0+(?=[1-9])/, '');
+            const formatAmount = n => { const x = parseInt(n, 10); return (isNaN(x) || x < 1) ? '' : x.toLocaleString(); };
+            const formatDec = n => {
+                const x = parseFloat(n);
+                if (isNaN(x) || x < 0) return '';
+                if (Number.isInteger(x)) return x >= 1 ? x.toLocaleString() : '';
+                const [a, b] = String(n).split('.');
+                const i = parseInt(a, 10) || 0;
+                return (i >= 1 ? i.toLocaleString() : '0') + '.' + (b || '0');
+            };
+            const fmtRate = n => parseFloat(Number(n).toFixed(6));
+            const fmtShow = n => Number(n).toFixed(2);
+            const PRESETS = [2e4, 4e4, 6e4, 8e4, 1e5];
+
+            /** 僅保留數字與最多一個小數點（貼上或輸入時過濾非數字） */
+            function stripToNumericOnly(str) {
+                let s = String(str).replace(/[^\d.]/g, '');
+                const parts = s.split('.');
+                if (parts.length > 1) s = parts[0] + '.' + parts.slice(1).join('').replace(/\D/g, '');
+                return s;
+            }
+
+            const rate = $('rate'), amount = $('amount'), fee = $('fee');
+            const effRate = $('effective-rate'), total = $('total-cost');
+            const customBlock = $('result-custom'), presetTbody = $('preset-tbody');
+            const inputs = [rate, amount, fee];
+            let firstFocus = true;
+
+            function calc() {
+                const r = parseFloat(rate.value) || 0, f = +fee.value || 0, a = parseAmount(amount.value);
+                if (r <= 0) {
+                    customBlock.style.display = 'none';
+                    presetTbody.innerHTML = '';
+                    return;
+                }
+                presetTbody.innerHTML = PRESETS.map(amt =>
+                    `<tr><td class="amount">${formatAmount(amt)}</td><td class="erate">${fmtShow(r + f / amt)}</td><td class="cost">${(amt * r + f).toLocaleString()}</td></tr>`
+                ).join('');
+                if (a > 0) {
+                    customBlock.style.display = 'block';
+                    effRate.textContent = fmtShow(r + f / a);
+                    total.textContent = (a * r + f).toLocaleString();
+                } else {
+                    customBlock.style.display = 'none';
+                }
+            }
+
+            function applyStripZeros(el) {
+                if (!el.value.startsWith('0') || el.value.length <= 1) return;
+                const val = stripZeros(el.value);
+                if (val === el.value) return;
+                const p = Math.min(el.selectionStart, val.length);
+                el.value = val;
+                el.setSelectionRange(p, p);
+            }
+
+            function onAmountInput() {
+                let s = stripToNumericOnly(this.value);
+                const parts = s.split('.');
+                s = parts[0] + (parts.length > 1 ? '.' + parts.slice(1).join('').replace(/\D/g, '') : '');
+                const dot = s.endsWith('.'), n = Math.max(0, parseFloat(s) || 0);
+                const rawBefore = this.value.slice(0, this.selectionStart).replace(/,/g, '');
+                let out = n > 0 ? formatDec(n) : (s === '' || s === '.' ? '' : '0');
+                if (dot) out += '.';
+                this.value = out;
+                if (out) {
+                    let i = 0, c = 0;
+                    for (; i < out.length && c < rawBefore.length; i++) if (/\d|\./.test(out[i])) c++;
+                    this.setSelectionRange(i, i);
+                }
+                calc();
+            }
+
+            function onAmountBlur() {
+                const n = parseAmount(this.value);
+                if (n > 0 || this.value === '0') this.value = formatDec(n) || this.value;
+            }
+
+            function bindInput(el, onInput, onBlur) {
+                el.addEventListener('focus', () => {
+                    if (firstFocus && el.value) { el.value = ''; firstFocus = false; calc(); }
+                });
+                el.addEventListener('keydown', e => {
+                    if (e.key === 'Delete') { e.preventDefault(); el.value = ''; calc(); }
+                });
+                el.addEventListener('input', onInput);
+                if (onBlur) el.addEventListener('blur', onBlur);
+            }
+
+            /** 統一貼上：僅提取數字與小數點後寫入，再觸發該輸入框的 input 邏輯 */
+            function onPaste(e) {
+                e.preventDefault();
+                const raw = (e.clipboardData || window.clipboardData).getData('text');
+                this.value = stripToNumericOnly(raw);
+                this.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+
+            bindInput(amount, onAmountInput, onAmountBlur);
+            bindInput(rate, function () {
+                this.value = stripToNumericOnly(this.value);
+                if (parseFloat(this.value) < 0) this.value = '';
+                applyStripZeros(this);
+                calc();
+            }, function () {
+                const v = parseFloat(this.value);
+                if (!isNaN(v) && v > 0) this.value = fmtRate(v);
+                if (v < 0) this.value = '';
+            });
+            bindInput(fee, function () {
+                this.value = stripToNumericOnly(this.value);
+                if (parseFloat(this.value) < 0) this.value = '0';
+                applyStripZeros(this);
+                calc();
+            });
+
+            inputs.forEach(el => {
+                el.addEventListener('paste', onPaste);
+                el.addEventListener('keydown', e => {
+                    if (['-', '+', 'e', 'E'].includes(e.key)) e.preventDefault();
+                });
+            });
+
+            inputs.forEach((el, i) => el.addEventListener('keydown', e => {
+                if (e.key === 'Enter') { e.preventDefault(); inputs[(i + 1) % 3].focus(); }
+            }));
+            $('btn-bot').addEventListener('click', e => {
+                e.preventDefault();
+                window.open(e.currentTarget.href, 'bot_rate', 'width=900,height=700,scrollbars=yes,resizable=yes');
+            });
+            calc();
+        })();
+    </script>
+</body>
+</html>

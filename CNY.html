@@ -346,8 +346,8 @@
       const input = elements.buyAmount.value;
       const secondDot = input.indexOf(".", input.indexOf(".") + 1);
       if (secondDot !== -1) {
-        elements.buyAmount.value = input.slice(0, secondDot - 1);
-        elements.sellAmount.value = input.slice(secondDot - 1);
+        elements.buyAmount.value = input.slice(0, secondDot);
+        elements.sellAmount.value = input.slice(secondDot + 1);
         elements.sellAmount.focus();
         elements.sellAmount.select();
       }
@@ -379,7 +379,7 @@
     }
 
     function openRatePopup() {
-      const w = 600, h = 400;
+      const w = 1000, h = 700;
       const left = (screen.width - w) / 2;
       const top = (screen.height - h) / 2;
       window.open("https://rate.bot.com.tw/xrt?Lang=zh-TW", "ratePopup",
