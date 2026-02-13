@@ -31,13 +31,13 @@ html { min-width: 1000px; -webkit-text-size-adjust: 100%; text-size-adjust: 100%
 body { min-width: 1000px; background: var(--bg-light); color: var(--text); line-height: 1.5; font-size: 14px; }
 ::-webkit-scrollbar { width: 0; height: 0; background: transparent; }
 
-/* 全新框架與容器 */
-.q-page { min-width: 1000px; padding: 0; margin: 0; }
+/* 架構: .q-page > .q-doc > .q-header / .q-body(sections) / .q-footer / .query-overlay */
+.q-page { min-width: 1000px; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; }
 .container, .q-doc.container { width: 1000px; max-width: 100%; min-width: 1000px; margin: 0 auto; background: #fff; box-shadow: 0 0 20px rgba(0,0,0,.1); }
 .q-doc.container { display: flex; flex-direction: column; }
-.q-header, .q-actions { flex-shrink: 0; }
-.q-body { flex: 1; display: flex; flex-direction: column; }
-.q-section { flex-shrink: 0; }
+.q-header, .q-footer, .q-actions { flex-shrink: 0; }
+.q-body { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.q-section { flex-shrink: 0; display: block; }
 .q-section-inner { width: 100%; }
 .q-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .q-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -117,12 +117,11 @@ table tbody tr:last-child td:last-child { border-bottom-right-radius: 5px; }
 #quoteTable .price-input { color: var(--primary); }
 
 .bank-totals-section, .legal-terms-section { padding: 8px 20px; }
-.bank-totals-section .q-grid-2, .legal-terms-section .q-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.bank-totals-section .q-grid-2 { align-items: start; }
-.legal-terms-section .q-grid-2 { align-items: stretch; }
-.flex-column-container { display: flex; flex-direction: column; padding: 0; margin: 0; }
+.bank-totals-section .q-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: start; }
+.legal-terms-section .q-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: stretch; }
+.flex-column-container { display: flex; flex-direction: column; margin: 0; padding: 0; }
 .content-box-light, .content-box-white { border: 1px solid var(--border); border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.1); overflow: visible; color: var(--text-light); }
-.content-box-light { background: var(--bg-light); padding: 8px; font-size: 13px; line-height: 1.4; height: auto; }
+.content-box-light { background: var(--bg-light); padding: 8px; font-size: 13px; line-height: 1.4; }
 .content-box-white { background: #fff; font-size: 14px; line-height: 1.3; }
 
 .terms-container { margin-bottom: 6px; flex-shrink: 0; }
@@ -142,11 +141,11 @@ table tbody tr:last-child td:last-child { border-bottom-right-radius: 5px; }
 
 .legal-notice-container, .legal-notice { height: 100%; display: flex; flex-direction: column; }
 .legal-notice { flex-grow: 1; overflow: visible; }
-.legal-notice h4 { color: var(--primary); margin-bottom: 4px; font-size: 15px; }
+.legal-notice h4 { color: var(--primary); font-size: 15px; margin-bottom: 4px; }
 .legal-notice p { margin-bottom: 5px; }
 .warranty-term-table { width: 100%; border-collapse: collapse; margin: 4px 0; }
 .warranty-term-table td { padding: 3px 5px; border: 1px solid var(--border); font-size: 12px; }
-.warranty-term-table .term-label { width: 20%; font-weight: 600; background: rgba(75,94,122,.1); color: var(--primary); }
+.warranty-term-table .term-label { width: 20%; font-weight: 600; color: var(--primary); background: rgba(75,94,122,.1); }
 
 .totals-table { width: 100%; border: none; background: #fff; border-radius: 4px; display: flex; flex-direction: column; justify-content: space-between; height: 100%; }
 .totals-row { height: 24px; display: flex; align-items: center; flex: 1; }
@@ -159,16 +158,16 @@ table tbody tr:last-child td:last-child { border-bottom-right-radius: 5px; }
 .totals-input:hover { background: var(--hover-bg); }
 
 .bank-info-container, .totals-container { height: 180px; display: flex; flex-direction: column; }
-.bank-info, .totals-table { box-sizing: border-box; padding: 6px 8px; flex-grow: 1; display: flex; flex-direction: column; margin-top: 3px; }
-.bank-info .info-group { margin: 0; display: flex; flex-direction: column; justify-content: space-between; height: 100%; }
-.bank-info .info-label { width: 75px; font-weight: 600; font-size: 15px; display: inline-block; color: var(--text-light); line-height: 1.2; }
-.bank-info .info-group p { font-size: 15px; line-height: 1.2; margin-bottom: 0; padding: 2px 0; height: 24px; display: flex; align-items: center; overflow: hidden; }
-.bank-info span { font-size: 15px; font-weight: 600; line-height: 1.2; min-height: 18px; display: inline-block; overflow: hidden; color: var(--text); }
+.bank-info, .totals-table { box-sizing: border-box; margin-top: 3px; padding: 6px 8px; flex-grow: 1; display: flex; flex-direction: column; }
+.bank-info .info-group { margin: 0; height: 100%; display: flex; flex-direction: column; justify-content: space-between; }
+.bank-info .info-label { width: 75px; font-size: 15px; font-weight: 600; color: var(--text-light); line-height: 1.2; display: inline-block; }
+.bank-info .info-group p { font-size: 15px; line-height: 1.2; margin: 0; padding: 2px 0; height: 24px; display: flex; align-items: center; overflow: hidden; }
+.bank-info span { font-size: 15px; font-weight: 600; line-height: 1.2; min-height: 18px; color: var(--text); display: inline-block; overflow: hidden; }
 
-.signature-section { width: 100%; display: flex; justify-content: space-between; padding: 8px 20px; gap: 15px; align-items: stretch; }
-.staff-info, .client-confirmation { width: calc(50% - 7.5px); text-align: left; background: #fff; padding: 8px; border: 1px solid var(--border); border-radius: 4px; display: flex; flex-direction: column; height: 100%; min-height: 120px; }
-.staff-info .info-group, .client-confirmation .info-group { margin-top: 2px; margin-bottom: 0; flex: 1; display: flex; flex-direction: column; justify-content: space-between; min-height: 90px; }
-.staff-info .info-label, .client-confirmation .info-label { width: 70px; display: inline-block; vertical-align: top; }
+.signature-section { width: 100%; padding: 8px 20px; display: flex; justify-content: space-between; align-items: stretch; gap: 15px; }
+.staff-info, .client-confirmation { width: calc(50% - 7.5px); min-height: 120px; padding: 8px; background: #fff; border: 1px solid var(--border); border-radius: 4px; display: flex; flex-direction: column; height: 100%; text-align: left; }
+.staff-info .info-group, .client-confirmation .info-group { margin: 2px 0 0; flex: 1; min-height: 90px; display: flex; flex-direction: column; justify-content: space-between; }
+.staff-info .info-label, .client-confirmation .info-label { width: 70px; vertical-align: top; display: inline-block; }
 
 /* 通知與查詢彈窗 */
 .notification-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; z-index: 10001; opacity: 0; visibility: hidden; transition: opacity .3s, visibility .3s; }
@@ -180,7 +179,7 @@ table tbody tr:last-child td:last-child { border-bottom-right-radius: 5px; }
 .notification-icon { display: flex; align-items: center; justify-content: center; }
 .notification-content { padding: 20px 16px; font-size: 16px; line-height: 1.5; text-align: center; }
 .notification-footer { padding: 12px 16px; border-top: 1px solid var(--border); display: flex; justify-content: center; gap: 10px; text-align: center; }
-.notification-btn { background: var(--primary); color: #fff; border: none; border-radius: 4px; padding: 8px 16px; font-weight: 600; cursor: pointer; transition: background-color .2s; font-size: 14px; }
+.notification-btn { background: var(--primary); color: #fff; border: none; border-radius: 4px; padding: 8px 16px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background-color .2s; }
 .notification-btn:hover { background: var(--primary-dark); }
 .notification-btn-cancel { background: var(--bg-highlight); color: var(--text); border: 1px solid var(--border); }
 .notification-btn-cancel:hover { background: var(--border); }
@@ -221,19 +220,18 @@ table tbody tr:last-child td:last-child { border-bottom-right-radius: 5px; }
 .copyright-text { margin-bottom: 0; }
 
 /* 客戶／聯絡／報價區塊 */
-.client-info, .contact-info, .quote-details { position: relative; padding: 4px 8px; border-radius: 4px; border: 1px solid transparent; margin: -1px; transition: all .2s ease; }
+.client-info, .contact-info, .quote-details { position: relative; margin: -1px; padding: 4px 8px; border: 1px solid transparent; border-radius: 4px; transition: all .2s ease; }
 .client-info:hover, .contact-info:hover, .quote-details:hover { background: var(--hover-bg); border-color: var(--border); box-shadow: 0 1px 4px rgba(0,0,0,.05); }
 .client-info .section-title, .contact-info .section-title, .quote-details .section-title { margin-bottom: 5px; padding-bottom: 2px; height: 18px; font-size: 13px; }
 .client-info .section-title { color: var(--primary); font-weight: 600; }
-.client-info .section-title:after { height: 2px; width: 32px; }
-.client-info .info-group h4 { font-weight: 600; color: var(--primary); margin-bottom: 3px; font-size: 14px; }
-.client-info .info-group p, .client-info .info-group h4 { display: block; width: 100%; margin: 0; padding: 0; line-height: 1.1; }
-.client-info .info-group p { color: var(--text-light); word-wrap: break-word; margin-bottom: 2px; line-height: 1.3; display: flex; align-items: center; gap: 2px; }
-.client-info .info-group h4:nth-of-type(1) { font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.1; margin-bottom: 2px; }
-.client-info .info-group h4:nth-of-type(2) { font-weight: normal; color: var(--text); font-size: 14px; white-space: normal; overflow: visible; text-overflow: clip; line-height: 1.2; margin-top: 2px; margin-bottom: 2px; }
-.client-info .info-label { font-weight: 600; display: inline-block; margin-right: 0; min-width: 40px; padding-right: 0; }
+.client-info .section-title:after { width: 32px; height: 2px; }
+.client-info .info-group h4 { display: block; width: 100%; margin: 0; padding: 0; font-size: 14px; font-weight: 600; color: var(--primary); line-height: 1.1; }
+.client-info .info-group h4:nth-of-type(1) { font-size: 18px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.client-info .info-group h4:nth-of-type(2) { font-size: 14px; font-weight: normal; color: var(--text); line-height: 1.2; margin: 2px 0; white-space: normal; overflow: visible; text-overflow: clip; }
+.client-info .info-group p { display: flex; width: 100%; margin: 0 0 2px; padding: 0; line-height: 1.3; align-items: center; gap: 2px; color: var(--text-light); word-wrap: break-word; }
+.client-info .info-label { font-weight: 600; min-width: 40px; display: inline-block; }
+.client-info .editable-field { display: inline-block; min-width: 100px; min-height: 16px; margin-left: -6px; padding: 1px 3px; border-bottom: 1px dashed rgba(203,213,225,.5); border-radius: 2px; transition: all .2s ease; }
 .client-info .editable-field:empty { min-height: 18px; background: rgba(241,245,249,.3); }
-.client-info .editable-field { border-bottom: 1px dashed rgba(203,213,225,.5); padding: 1px 3px; border-radius: 2px; transition: all .2s ease; min-width: 100px; min-height: 16px; margin-left: -6px; display: inline-block; }
 .client-info p:last-child { margin-bottom: 1px; }
 .contact-info .info-group p, .quote-details .info-group p { margin-bottom: 2px; line-height: 1.3; }
 .quote-details .info-group { margin-top: 4px; }
@@ -303,8 +301,11 @@ table tbody tr:last-child td:last-child { border-bottom-right-radius: 5px; }
 </style>
 </head>
 <body>
+<!-- 1. 頁面最外層 -->
 <div class="q-page">
+  <!-- 2. 文件主容器 -->
   <div class="q-doc container">
+    <!-- 3. 頁首區塊（最上） -->
     <header class="q-header header section">
       <div class="q-header-inner">
         <div class="company-info">
@@ -322,8 +323,11 @@ table tbody tr:last-child td:last-child { border-bottom-right-radius: 5px; }
         </div>
       </div>
     </header>
+
+    <!-- 4. 主體內容區（由上而下依序排列） -->
     <main class="q-body">
-      <section class="q-section q-section--info quote-info section">
+      <!-- 5. 客戶／聯絡／報價資訊（第一區） -->
+      <section class="q-section q-section--info quote-info section" aria-label="客戶與報價資訊">
         <div class="q-section-inner q-grid-3">
           <div class="client-info">
             <div class="section-title">客戶資訊</div>
@@ -351,7 +355,9 @@ table tbody tr:last-child td:last-child { border-bottom-right-radius: 5px; }
           </div>
         </div>
       </section>
-      <section class="q-section q-section--items items-section section">
+
+      <!-- 6. 報價商品明細（第二區） -->
+      <section class="q-section q-section--items items-section section" aria-label="報價商品明細">
         <div class="q-section-inner">
           <div class="section-title-with-controls">
             <div class="section-title">報價商品明細</div>
@@ -388,7 +394,9 @@ table tbody tr:last-child td:last-child { border-bottom-right-radius: 5px; }
           </div>
         </div>
       </section>
-      <section class="q-section q-section--totals bank-totals-section section">
+
+      <!-- 7. 銀行資訊與總計金額（第三區） -->
+      <section class="q-section q-section--totals bank-totals-section section" aria-label="銀行與總計">
         <div class="q-section-inner q-grid-2">
           <div class="bank-info-container flex-column-container">
             <div class="section-title">銀行資訊</div>
@@ -422,7 +430,9 @@ table tbody tr:last-child td:last-child { border-bottom-right-radius: 5px; }
           </div>
         </div>
       </section>
-      <section class="q-section q-section--legal legal-terms-section section">
+
+      <!-- 8. 法律聲明／條款／備註（第四區） -->
+      <section class="q-section q-section--legal legal-terms-section section" aria-label="法律與條款">
         <div class="q-section-inner q-grid-2">
           <div class="legal-notice-container">
             <div class="section-title">法律聲明與注意事項</div>
@@ -471,7 +481,9 @@ table tbody tr:last-child td:last-child { border-bottom-right-radius: 5px; }
           </div>
         </div>
       </section>
-      <section class="q-section q-section--signature signature-section section">
+
+      <!-- 9. 簽核區：銷售方／採購方（第五區，最下） -->
+      <section class="q-section q-section--signature signature-section section" aria-label="簽核資訊">
         <div class="q-section-inner q-flex-row">
           <div class="staff-info" id="staff-info">
             <div class="section-title" id="staff-title">銷售方資訊</div>
@@ -492,21 +504,25 @@ table tbody tr:last-child td:last-child { border-bottom-right-radius: 5px; }
         </div>
       </section>
     </main>
-    <footer class="q-actions button-section">
+
+    <!-- 10. 頁尾操作區（按鈕） -->
+    <footer class="q-footer q-actions button-section">
       <button id="previewBtn">產出預覽</button>
       <button id="saveToFirebaseBtn">報價存檔</button>
       <button id="queryQuotationBtn">查詢報價</button>
     </footer>
   </div>
-</div>
-<div id="queryQuotationOverlay" class="query-overlay">
-  <div class="query-modal">
-    <div class="query-modal-header">
-      <span class="query-modal-title">目前已存報價單</span>
-      <button type="button" class="query-modal-close" id="queryModalClose" aria-label="關閉">&times;</button>
-    </div>
-    <div class="query-modal-body">
-      <div id="queryGridContainer"></div>
+
+  <!-- 11. 查詢報價彈窗（疊於最前，獨立於文件流） -->
+  <div id="queryQuotationOverlay" class="query-overlay">
+    <div class="query-modal">
+      <div class="query-modal-header">
+        <span class="query-modal-title">目前已存報價單</span>
+        <button type="button" class="query-modal-close" id="queryModalClose" aria-label="關閉">&times;</button>
+      </div>
+      <div class="query-modal-body">
+        <div id="queryGridContainer"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -553,12 +569,11 @@ try {
 const safeQuoteFileName = (name) => (!name || typeof name !== 'string') ? 'quote_' + Date.now() : (name.replace(/[/\\:*?"<>|]/g, '_').trim() || 'quote_' + Date.now());
 
 const setDocumentTitleForPrint = () => {
-  if(!window._originalDocumentTitle) window._originalDocumentTitle=document.title;
-  const newTitle=byId('quoteNumber')?.textContent?.trim()||`報價單_${new Date().toISOString().split('T')[0].replace(/-/g,'')}`;
-  document.title=newTitle;
-  const el=document.querySelector('title')||document.head.appendChild(document.createElement('title'));
-  el.textContent=newTitle;
-}
+  if (!window._originalDocumentTitle) window._originalDocumentTitle = document.title;
+  const newTitle = byId('quoteNumber')?.textContent?.trim() || `報價單_${new Date().toISOString().slice(0, 10).replace(/-/g, '')}`;
+  document.title = newTitle;
+  (document.querySelector('title') || document.head.appendChild(document.createElement('title'))).textContent = newTitle;
+};
 
 const setupPrintHandlers = () => {
   const setControls = (hide) => document.querySelectorAll(SEL_PRINT_HIDE).forEach(el => { el.style.display = hide ? 'none' : ''; el.style.visibility = hide ? 'hidden' : ''; el.style.opacity = hide ? '0' : ''; });
@@ -572,28 +587,29 @@ const setupPrintHandlers = () => {
       const notesDiv=document.createElement('div');
       notesDiv.className='notes-textarea-display'; notesDiv.setAttribute('data-notes-replacement','true');
       notesDiv.textContent=textarea.value||'';
-      notesDiv.style.cssText='width:100%;margin:0;padding:12px;min-height:60px;font-size:12px;line-height:1.4;font-family:Arial,sans-serif;border:1px solid var(--border);border-radius:4px;background:var(--bg-light);color:var(--text-light);box-sizing:border-box;overflow-y:auto;white-space:pre-wrap;word-wrap:break-word;';
+      // 與原始頁面 #notes-textarea 一致：height/min-height 100% 填滿容器，外觀與編輯時相同
+      notesDiv.style.cssText='width:100%;margin:0;padding:12px;height:100%;min-height:100%;font-size:12px;line-height:1.4;font-family:Arial,sans-serif;border:1px solid var(--border);border-radius:4px;background:var(--bg-light);color:var(--text-light);box-sizing:border-box;overflow-y:auto;white-space:pre-wrap;word-wrap:break-word;';
       window._notesTextareaRef=textarea;
       textarea.parentNode.replaceChild(notesDiv,textarea);
     }
     document.querySelectorAll(SEL_EDITABLE).forEach(el=>{el.dataset.originalBorder=el.style.border;el.style.border='none';if(!el.textContent.trim()){el.dataset.wasEmpty="true";el.style.color='transparent';}});
     document.querySelectorAll('input.input-field').forEach(el=>{if(!el.value){el.dataset.wasEmpty="true";el.style.color='transparent';}});
-    const tableBody=byId('itemsTableBody');
-    if(tableBody){
-      const rows=tableBody.querySelectorAll('tr')
-      const visibleRows=Array.from(rows).filter(row=>row.style.display!=='none')
-      if(visibleRows.length<5){
-        if(rows.length<5){
-          for(let i=0;i<5-rows.length;i++){
-            const newRow=document.createElement('tr')
-            newRow.innerHTML=rows[0].innerHTML
-            newRow.dataset.addedForPrint="true"
-            newRow.querySelectorAll('input').forEach(input=>{input.value='';input.style.border='none'})
-            tableBody.appendChild(newRow)
-          }
+    const tableBody = byId('itemsTableBody');
+    if (tableBody) {
+      const rows = tableBody.querySelectorAll('tr');
+      const visibleRows = Array.from(rows).filter(row => row.style.display !== 'none');
+      if (visibleRows.length < 5 && rows.length < 5) {
+        for (let i = 0; i < 5 - rows.length; i++) {
+          const newRow = document.createElement('tr');
+          newRow.innerHTML = rows[0].innerHTML;
+          newRow.dataset.addedForPrint = 'true';
+          newRow.querySelectorAll('input').forEach(input => { input.value = ''; input.style.border = 'none'; });
+          tableBody.appendChild(newRow);
         }
       }
-      tableBody.querySelectorAll('input').forEach(input=>{if(!input.value.trim()){input.style.border='none';input.style.minHeight='14px'}})
+      tableBody.querySelectorAll('input').forEach(input => {
+        if (!input.value.trim()) { input.style.border = 'none'; input.style.minHeight = '14px'; }
+      });
     }
     document.querySelectorAll('.header, .header *, table th, .warranty-term-table .term-label').forEach(el=>{el.style.webkitPrintColorAdjust='exact';el.style.printColorAdjust='exact'})
     const notification=document.querySelector('.notification-overlay.show')
@@ -672,25 +688,24 @@ function confirmDialog(msg,options={}){
 
 function quoteNumberFromDate(date=today,prefix=''){try{const m=MONTH_PREFIX[date.getMonth()],yy=date.getFullYear().toString().slice(-2),mm=String(date.getMonth()+1).padStart(2,"0"),dd=String(date.getDate()).padStart(2,"0"),rand=Math.random().toString(36).substring(2,4).toUpperCase();return`${prefix}${m}-${yy}${mm}${dd}${rand}`;}catch{return`${prefix}${Math.random().toString(36).substring(2,8).toUpperCase()}`;}}
 function generateQuoteNumber(){try{const input=byId('quoteDate'),val=input?.value||today.toISOString().split("T")[0],d=new Date(val),el=byId('quoteNumber');if(el)el.textContent=quoteNumberFromDate(d);}catch{}}
-function initDates(){
-  try{
-    const dateInput=byId('quoteDate'),dateText=byId('quoteDateText');
-    if(!dateInput||!dateText)return;
-    dateInput.value=today.toISOString().split("T")[0];
-    dateText.textContent=F.formatDate(dateInput.value);
-    const base=new Date(dateInput.value);
-    const setDerivedDate=(inputId,textId,days)=>{
-      const input=byId(inputId),text=byId(textId);
-      if(input&&text){
-        const date=new Date(base);
-        date.setDate(base.getDate()+days);
-        input.value=date.toISOString().split("T")[0];
-        text.textContent=F.formatDate(input.value);
+function initDates() {
+  try {
+    const dateInput = byId('quoteDate'), dateText = byId('quoteDateText');
+    if (!dateInput || !dateText) return;
+    dateInput.value = today.toISOString().slice(0, 10);
+    dateText.textContent = F.formatDate(dateInput.value);
+    const base = new Date(dateInput.value);
+    const setDerivedDate = (inputId, textId, days) => {
+      const input = byId(inputId), text = byId(textId);
+      if (input && text) {
+        const d = new Date(base); d.setDate(base.getDate() + days);
+        input.value = d.toISOString().slice(0, 10);
+        text.textContent = F.formatDate(input.value);
       }
     };
-    setDerivedDate('quoteValidUntil','quoteValidText',CFG.DEFAULT_VALID_DAYS);
-    setDerivedDate('deliveryDate','deliveryDateText',CFG.DEFAULT_DELIVERY_DAYS);
-  }catch{}
+    setDerivedDate('quoteValidUntil', 'quoteValidText', CFG.DEFAULT_VALID_DAYS);
+    setDerivedDate('deliveryDate', 'deliveryDateText', CFG.DEFAULT_DELIVERY_DAYS);
+  } catch (_) {}
   generateQuoteNumber();
 }
 
@@ -699,8 +714,8 @@ const createTableRow=()=>{const tr=document.createElement("tr");tr.innerHTML=ROW
 function initItemsTable(){const tbody=byId('itemsTableBody');if(tbody)try{tbody.innerHTML='';for(let i=0;i<7;i++)tbody.appendChild(createTableRow());recalcTotals();}catch{}}
 function addItemRow(){const tbody=byId('itemsTableBody');if(tbody)try{tbody.appendChild(createTableRow());recalcTotals();}catch{}}
 function recalcTotals() {
-  const tbody = byId('itemsTableBody'), grandTotal = byId('grandTotal'), taxType = byId('taxType');
-  if (!tbody || !grandTotal) return;
+  const tbody = byId('itemsTableBody'), taxType = byId('taxType');
+  if (!tbody || !byId('grandTotal')) return;
   let subtotal = 0, shippingSum = 0, installationSum = 0;
   try {
     Array.from(tbody.children).forEach(tr => {
@@ -714,19 +729,28 @@ function recalcTotals() {
       shippingSum += ship;
       installationSum += Math.round(inst * qty);
     });
-    const set = (el, val) => { if (el) el.value = F.formatCurrency(val); };
+    const set = (id, val) => { const el = byId(id); if (el) el.value = F.formatCurrency(val); };
     const sum = subtotal + shippingSum + installationSum;
     const tax = (taxType?.value === 'taxed') ? Math.round(sum * CFG.TAX_RATE) : 0;
     const total = sum + tax;
-    [[ 'totalInstallation', installationSum ], [ 'totalShipping', shippingSum ], [ 'taxAmount', tax ], [ 'depositAmount', Math.round(total * CFG.DEPOSIT_RATE) ], [ 'grandTotal', total ]].forEach(([ id, val ]) => set(byId(id), val));
+    set('totalInstallation', installationSum);
+    set('totalShipping', shippingSum);
+    set('taxAmount', tax);
+    set('depositAmount', Math.round(total * CFG.DEPOSIT_RATE));
+    set('grandTotal', total);
   } catch (_) {}
 }
 
-function setupTotalsInputs(){
-  document.querySelectorAll('.totals-input').forEach(input=>{
-    input.addEventListener('input',e=>{const v=F.parseNumber(e.target.value);e.target.value=F.formatCurrency(v>CFG.MAX_VALUE?(notify("數值超出最大限制","warning"),CFG.MAX_VALUE):v<CFG.MIN_VALUE?(notify("數值超出最小限制","warning"),CFG.MIN_VALUE):v)});
-    input.addEventListener('blur',e=>{e.target.value=F.formatCurrency(F.parseNumber(e.target.value))});
-    input.addEventListener('focus',e=>{e.target.select()});
+function setupTotalsInputs() {
+  const clamp = (v) => {
+    if (v > CFG.MAX_VALUE) { notify('數值超出最大限制', 'warning'); return CFG.MAX_VALUE; }
+    if (v < CFG.MIN_VALUE) { notify('數值超出最小限制', 'warning'); return CFG.MIN_VALUE; }
+    return v;
+  };
+  document.querySelectorAll('.totals-input').forEach(input => {
+    input.addEventListener('input', e => { const v = F.parseNumber(e.target.value); e.target.value = F.formatCurrency(clamp(v)); });
+    input.addEventListener('blur', e => { e.target.value = F.formatCurrency(F.parseNumber(e.target.value)); });
+    input.addEventListener('focus', e => { e.target.select(); });
   });
 }
 
@@ -740,34 +764,44 @@ const openDatePicker = (e) => {
   if (!input) return;
   if ('showPicker' in input) input.showPicker(); else { input.focus(); input.click(); }
 };
-function bindDateInput(inputEl,textEl,callback){
-  if(!inputEl||!textEl) return;
-  const updateDisplayText=()=>{ if(textEl&&inputEl.value) textEl.textContent=F.formatDate(inputEl.value); };
-  const validateAndUpdate=()=>{
-    if(!textEl) return;
-    const currentDate=new Date(inputEl.value); if(isNaN(currentDate.getTime())) return;
-    const quoteDate=byId('quoteDate'), quoteDateValue=quoteDate?.value?new Date(quoteDate.value):null;
-    if(quoteDateValue&&isNaN(quoteDateValue.getTime())) return;
-    if(inputEl.id==='quoteValidUntil'||inputEl.id==='deliveryDate'){
-      if(!quoteDateValue||currentDate>=quoteDateValue) {} else {
-        notify('本欄位不得早於報價日','warning');
-        const newDate=new Date(quoteDateValue); newDate.setDate(quoteDateValue.getDate()+(inputEl.id==='quoteValidUntil'?CFG.DEFAULT_VALID_DAYS:CFG.DEFAULT_DELIVERY_DAYS));
-        inputEl.value=newDate.toISOString().split('T')[0]; textEl.textContent=F.formatDate(inputEl.value); return;
-      }
+function bindDateInput(inputEl, textEl, callback) {
+  if (!inputEl || !textEl) return;
+  const updateDisplayText = () => { if (inputEl.value) textEl.textContent = F.formatDate(inputEl.value); };
+  const validateAndUpdate = () => {
+    const currentDate = new Date(inputEl.value);
+    if (isNaN(currentDate.getTime())) return;
+    const quoteDateEl = byId('quoteDate'), quoteDateValue = quoteDateEl?.value ? new Date(quoteDateEl.value) : null;
+    if (quoteDateValue && isNaN(quoteDateValue.getTime())) return;
+    if ((inputEl.id === 'quoteValidUntil' || inputEl.id === 'deliveryDate') && quoteDateValue && currentDate < quoteDateValue) {
+      notify('本欄位不得早於報價日', 'warning');
+      const days = inputEl.id === 'quoteValidUntil' ? CFG.DEFAULT_VALID_DAYS : CFG.DEFAULT_DELIVERY_DAYS;
+      const d = new Date(quoteDateValue); d.setDate(quoteDateValue.getDate() + days);
+      inputEl.value = d.toISOString().slice(0, 10); textEl.textContent = F.formatDate(inputEl.value);
+      return;
     }
-    if(inputEl.id==='quoteDate'){
-      const validUntil=byId('quoteValidUntil'), validUntilText=byId('quoteValidText'), deliveryDate=byId('deliveryDate'), deliveryDateText=byId('deliveryDateText');
-      if(validUntil&&validUntilText){ const d=new Date(currentDate); d.setDate(currentDate.getDate()+CFG.DEFAULT_VALID_DAYS); validUntil.value=d.toISOString().split('T')[0]; validUntilText.textContent=F.formatDate(validUntil.value); }
-      if(deliveryDate&&deliveryDateText){ const d=new Date(currentDate); d.setDate(currentDate.getDate()+CFG.DEFAULT_DELIVERY_DAYS); deliveryDate.value=d.toISOString().split('T')[0]; deliveryDateText.textContent=F.formatDate(deliveryDate.value); }
+    if (inputEl.id === 'quoteDate') {
+      const validUntil = byId('quoteValidUntil'), validUntilText = byId('quoteValidText');
+      const deliveryDate = byId('deliveryDate'), deliveryDateText = byId('deliveryDateText');
+      if (validUntil && validUntilText) { const d = new Date(currentDate); d.setDate(currentDate.getDate() + CFG.DEFAULT_VALID_DAYS); validUntil.value = d.toISOString().slice(0, 10); validUntilText.textContent = F.formatDate(validUntil.value); }
+      if (deliveryDate && deliveryDateText) { const d = new Date(currentDate); d.setDate(currentDate.getDate() + CFG.DEFAULT_DELIVERY_DAYS); deliveryDate.value = d.toISOString().slice(0, 10); deliveryDateText.textContent = F.formatDate(deliveryDate.value); }
     }
-    if(typeof callback==='function') callback.call(inputEl); if(inputEl.id==='quoteDate') generateQuoteNumber();
+    if (typeof callback === 'function') callback.call(inputEl);
+    if (inputEl.id === 'quoteDate') generateQuoteNumber();
   };
-  inputEl.addEventListener('input',updateDisplayText); inputEl.addEventListener('change',validateAndUpdate); inputEl.addEventListener('blur',validateAndUpdate);
+  inputEl.addEventListener('input', updateDisplayText);
+  inputEl.addEventListener('change', validateAndUpdate);
+  inputEl.addEventListener('blur', validateAndUpdate);
 }
-function setupNotesTrim(){
+function setupNotesTrim() {
   const textarea = byId('notes-textarea');
-  if(!textarea)return;
-  textarea.addEventListener('blur',function(){if(this.value){let lines=this.value.split('\n').map(l=>l.trim());while(lines.length>0&&lines[0]==='')lines.shift();while(lines.length>0&&lines[lines.length-1]==='')lines.pop();this.value=lines.join('\n')}})
+  if (!textarea) return;
+  textarea.addEventListener('blur', function () {
+    if (!this.value) return;
+    const lines = this.value.split('\n').map(l => l.trim());
+    while (lines.length && lines[0] === '') lines.shift();
+    while (lines.length && lines[lines.length - 1] === '') lines.pop();
+    this.value = lines.join('\n');
+  });
 }
 
 const createMirrorPreview = () => {
@@ -861,14 +895,10 @@ const setupButtonHandlers=()=>{
         window.prepareDocumentForDisplay();
         buttonSection.style.display = 'none';
         loadingMsg = notify('報價存檔中，請耐心等候', 'info', { blocking: true });
-        const images = container.querySelectorAll('img');
-        await Promise.all(Array.from(images).map(img => {
-          if (img.complete && img.naturalHeight !== 0) return Promise.resolve();
-          return new Promise((resolve) => {
-            img.onload = img.onerror = resolve;
-            setTimeout(resolve, 5000);
-          });
-        }));
+        const waitForImages = (parent) => Promise.all(Array.from(parent.querySelectorAll('img')).map(img =>
+          (img.complete && img.naturalHeight !== 0) ? Promise.resolve() : new Promise(r => { img.onload = img.onerror = r; setTimeout(r, 5000); })
+        ));
+        await waitForImages(container);
         await new Promise(r => setTimeout(r, 300));
         const canvas = await html2canvas(container, {
           scale: 4,
@@ -936,8 +966,8 @@ const setupButtonHandlers=()=>{
         const urls = await Promise.all(items.map(item => item.getDownloadURL()));
         gridContainer.innerHTML = '';
         gridContainer.className = 'query-grid';
-        const eyeSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
-        const closeSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+        const SVG_EYE = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+        const SVG_CLOSE = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
         items.forEach((item, i) => {
           const name = item.name.replace(/\.(jpg|jpeg|png)$/i, '');
           const url = urls[i];
@@ -957,12 +987,12 @@ const setupButtonHandlers=()=>{
           viewBtn.type = 'button';
           viewBtn.className = 'query-action-btn query-action-view';
           viewBtn.title = '查看';
-          viewBtn.innerHTML = eyeSvg;
+          viewBtn.innerHTML = SVG_EYE;
           const deleteBtn = document.createElement('button');
           deleteBtn.type = 'button';
           deleteBtn.className = 'query-action-btn query-action-delete';
           deleteBtn.title = '刪除';
-          deleteBtn.innerHTML = closeSvg;
+          deleteBtn.innerHTML = SVG_CLOSE;
           actions.appendChild(viewBtn);
           actions.appendChild(deleteBtn);
           card.appendChild(img);
@@ -1011,11 +1041,9 @@ function setupQuoteTableEvents(){
 
   const quoteTable=byId('quoteTable')
   if(quoteTable){
-    const priceInputs='.price-input, .shipping-input, .installation-input',
-          allInputs=`${priceInputs}, .quantity-input, .category-input, .name-input, .unit-input`
-    
-    // 通用函數：檢查欄位是否需要顯示 N/A
-    const checkFieldNA=(input,fieldType)=>{
+    const priceInputs = '.price-input, .shipping-input, .installation-input';
+    const allInputs = `${priceInputs}, .quantity-input, .category-input, .name-input, .unit-input`;
+    const checkFieldNA = (input, fieldType) => {
       if(!input||!input.classList.contains(fieldType))return
       const row=input.closest('tr')
       if(!row)return
@@ -1038,10 +1066,8 @@ function setupQuoteTableEvents(){
         input.style.color=''
         input.style.fontStyle=''
       }
-    }
-    
-    // Consolidated input handling
-    const handleInput=event=>{
+    };
+    const handleInput = event => {
       const target=event.target
       if(!target.matches(allInputs))return
       if(target.value)target.value=target.value.trim()
@@ -1062,11 +1088,9 @@ function setupQuoteTableEvents(){
           checkFieldNA(shippingInput,'shipping-input')
         }
       }
-      updateTotals()
-    }
-    
-    // 通用函數：處理安裝/運費欄位的 focus 和 blur
-    const handleNAField=(event,fieldType)=>{
+      updateTotals();
+    };
+    const handleNAField = (event, fieldType) => {
       const target=event.target
       if(!target.classList.contains(fieldType))return
       if(event.type==='focus'){
@@ -1083,28 +1107,25 @@ function setupQuoteTableEvents(){
           target.style.color=''
           target.style.fontStyle=''
         }
-        // 安裝欄位變更後，也要檢查運費欄位
-        if(fieldType==='installation-input'){
-          const row=target.closest('tr')
-          const shippingInput=row?.querySelector('.shipping-input')
-          if(shippingInput)checkFieldNA(shippingInput,'shipping-input')
+        if (fieldType === 'installation-input') {
+          const row = target.closest('tr');
+          const shippingInput = row?.querySelector('.shipping-input');
+          if (shippingInput) checkFieldNA(shippingInput, 'shipping-input');
         }
       }
-    }
-
-    const initializeInstallationFields=()=>{
-      const tableBody=byId('itemsTableBody')
-      if(tableBody){
-        tableBody.querySelectorAll('tr').forEach(row=>{
-          const installationInput=row.querySelector('.installation-input')
-          const shippingInput=row.querySelector('.shipping-input')
-          if(installationInput)checkFieldNA(installationInput,'installation-input')
-          if(shippingInput)checkFieldNA(shippingInput,'shipping-input')
-        })
+    };
+    const initializeInstallationFields = () => {
+      const tableBody = byId('itemsTableBody');
+      if (tableBody) {
+        tableBody.querySelectorAll('tr').forEach(row => {
+          const installationInput = row.querySelector('.installation-input');
+          const shippingInput = row.querySelector('.shipping-input');
+          if (installationInput) checkFieldNA(installationInput, 'installation-input');
+          if (shippingInput) checkFieldNA(shippingInput, 'shipping-input');
+        });
       }
-    }
-    
-    quoteTable.addEventListener('input',handleInput)
+    };
+    quoteTable.addEventListener('input', handleInput);
     quoteTable.addEventListener('paste',e=>{if(e.target.matches(allInputs))setTimeout(()=>handleInput(e),0)})
     
     quoteTable.addEventListener('blur',event=>{
@@ -1176,6 +1197,110 @@ function setupQuoteTableEvents(){
   
 }
 
+function setupPhoneFormatting() {
+  const ALLOWED_KEYS = ['Backspace','Delete','Tab','Escape','Enter','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End','PageUp','PageDown'];
+  const PHONE_RE = /[^\d+\-() #,]/g;
+  const ALLOWED_CHARS = /[0-9+\-() #,]/;
+  let processing = false;
+  document.querySelectorAll('[data-type="phone"]').forEach(field => {
+    field.addEventListener('focus', function () { if (this.dataset.type === 'phone') this.setAttribute('inputmode', 'tel'); });
+    field.addEventListener('keydown', function (e) {
+      if (this.dataset.type !== 'phone') return;
+      if (e.ctrlKey || e.metaKey || ALLOWED_KEYS.includes(e.key)) return;
+      if (ALLOWED_CHARS.test(e.key)) { if (this.textContent.length >= 25) e.preventDefault(); return; }
+      e.preventDefault();
+    });
+    field.addEventListener('input', function () {
+      if (this.dataset.type !== 'phone' || processing) return;
+      processing = true;
+      const sel = window.getSelection(), rng = sel.rangeCount ? sel.getRangeAt(0) : null, oldText = this.textContent, oldLen = oldText.replace(PHONE_RE, '').length;
+      const clean = this.textContent.replace(PHONE_RE, '');
+      if (!clean.length) { this.textContent = ''; processing = false; return; }
+      const formatted = F.formatText(clean, 'phone');
+      if (formatted !== oldText) {
+        this.textContent = formatted;
+        const pos = clean.length > oldLen ? formatted.length : Math.min((rng && this.firstChild ? rng.startOffset : 0), formatted.length);
+        if (this.firstChild && this.firstChild.nodeType === Node.TEXT_NODE) try {
+          const nr = document.createRange(); nr.setStart(this.firstChild, Math.min(Math.max(0, pos), formatted.length)); nr.collapse(true);
+          window.getSelection().removeAllRanges(); window.getSelection().addRange(nr);
+        } catch (_) {}
+      }
+      setTimeout(() => { processing = false; }, 10);
+    });
+    field.addEventListener('blur', function () { if (this.dataset.type === 'phone') this.textContent = F.formatText(this.textContent.replace(PHONE_RE, '').trim(), 'phone'); });
+    field.addEventListener('paste', function (e) { if (this.dataset.type !== 'phone') return; e.preventDefault(); this.textContent = F.formatText((e.clipboardData || window.clipboardData).getData('text').replace(PHONE_RE, '').trim(), 'phone'); this.dispatchEvent(new Event('input', { bubbles: true })); });
+  });
+}
+
+function setupPlainTextPasteHandling() {
+  document.querySelectorAll(SEL_EDITABLE).forEach(field => {
+    if (field.dataset.pasteHandlerAdded || field.dataset.type === 'phone') return;
+    field.dataset.pasteHandlerAdded = 'true';
+    field.addEventListener('paste', function (e) {
+      e.preventDefault();
+      const raw = (e.clipboardData || window.clipboardData).getData('text');
+      const txt = this.dataset.type === 'email' ? raw.replace(/\s/g, '').trim() : raw.trim();
+      const sel = window.getSelection();
+      if (sel.rangeCount > 0) { const r = sel.getRangeAt(0); r.deleteContents(); const node = document.createTextNode(txt); r.insertNode(node); r.setStartAfter(node); r.collapse(true); sel.removeAllRanges(); sel.addRange(r); }
+      else { this.textContent = txt; const r = document.createRange(); r.selectNodeContents(this); r.collapse(false); sel.removeAllRanges(); sel.addRange(r); }
+      this.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+  });
+}
+
+function setupKeyboardShortcuts() {
+  document.querySelectorAll('input.input-field, input.totals-input').forEach(input => {
+    if (input.dataset.keyboardHandlerAdded) return;
+    input.dataset.keyboardHandlerAdded = 'true';
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Delete' && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey && this.selectionStart === this.selectionEnd && this.selectionStart === this.value.length && this.value.length > 0) {
+        e.preventDefault(); this.value = ''; this.dispatchEvent(new Event('input', { bubbles: true })); this.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    });
+  });
+  document.querySelectorAll(SEL_EDITABLE).forEach(field => {
+    if (field.dataset.keyboardHandlerAdded || field.dataset.type === 'phone') return;
+    field.dataset.keyboardHandlerAdded = 'true';
+    field.addEventListener('keydown', function (e) {
+      if (e.key !== 'Delete' || e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
+      const sel = window.getSelection(); if (sel.rangeCount === 0) return;
+      const r = sel.getRangeAt(0); if (!r.collapsed) return;
+      const len = (this.firstChild && this.firstChild.nodeType === Node.TEXT_NODE) ? this.firstChild.textContent.length : (this.textContent || '').length;
+      const atEnd = (r.startContainer === this || r.startContainer.parentNode === this) ? r.startOffset === len : (r.startContainer.nodeType === Node.TEXT_NODE && r.startOffset === r.startContainer.textContent.length);
+      if (atEnd && (this.textContent || '').length > 0) { e.preventDefault(); this.textContent = ''; this.dispatchEvent(new Event('input', { bubbles: true })); }
+    });
+  });
+}
+
+function setupLogoUpload() {
+  const logoContainer = byId('logo-container'), uploadLogo = byId('upload-logo');
+  if (!logoContainer || !uploadLogo) return;
+  logoContainer.addEventListener('click', () => uploadLogo.click());
+  uploadLogo.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { notify('請選擇圖片檔案', 'error'); return; }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = document.createElement('img');
+      img.src = ev.target.result;
+      img.style.maxHeight = '50px';
+      img.style.objectFit = 'contain';
+      logoContainer.innerHTML = '';
+      logoContainer.appendChild(img);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function setupContactSync() {
+  const contactInfo = document.querySelector('.contact-info'), clientConfirmation = document.querySelector('.client-confirmation');
+  if (!contactInfo || !clientConfirmation) return;
+  const contactFields = contactInfo.querySelectorAll('.editable-field'), clientFields = clientConfirmation.querySelectorAll('.editable-field');
+  const sync = (src, tgt) => { if (!src || !tgt) return; const c = src.textContent.trim(); if (c) tgt.textContent = src.dataset.type === 'phone' ? F.formatText(c, 'phone') : c; };
+  contactFields.forEach((field, i) => { field.addEventListener('input', () => sync(field, clientFields[i])); field.addEventListener('blur', () => sync(field, clientFields[i])); });
+}
+
 function init() {
   try {
     initDates();
@@ -1186,110 +1311,12 @@ function init() {
     setupNotesTrim();
     setupButtonHandlers();
     setupTotalsInputs();
-    const logoContainer = byId('logo-container'), uploadLogo = byId('upload-logo');
-    if (logoContainer && uploadLogo) {
-      logoContainer.addEventListener('click', () => uploadLogo.click());
-      uploadLogo.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        if (!file.type.startsWith('image/')) { notify('請選擇圖片檔案', 'error'); return; }
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-          const img = document.createElement('img');
-          img.src = ev.target.result;
-          img.style.maxHeight = '50px';
-          img.style.objectFit = 'contain';
-          logoContainer.innerHTML = '';
-          logoContainer.appendChild(img);
-        };
-        reader.readAsDataURL(file);
-      });
-    }
-
-    function setupPhoneFormatting() {
-      const ALLOWED_KEYS = ['Backspace','Delete','Tab','Escape','Enter','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End','PageUp','PageDown'];
-      const PHONE_RE = /[^\d+\-() #,]/g;
-      const ALLOWED_CHARS = /[0-9+\-() #,]/;
-      let processing = false;
-      document.querySelectorAll('[data-type="phone"]').forEach(field=>{
-        field.addEventListener('focus',function(){ if(this.dataset.type==='phone') this.setAttribute('inputmode','tel'); });
-        field.addEventListener('keydown',function(e){
-          if(this.dataset.type!=='phone') return;
-          if(e.ctrlKey||e.metaKey||ALLOWED_KEYS.includes(e.key)) return;
-          if(ALLOWED_CHARS.test(e.key)){ if(this.textContent.length>=25) e.preventDefault(); return; }
-          e.preventDefault();
-        });
-        field.addEventListener('input',function(){
-          if(this.dataset.type!=='phone'||processing) return;
-          processing=true;
-          const sel=window.getSelection(), rng=sel.rangeCount?sel.getRangeAt(0):null, oldText=this.textContent, oldLen=(oldText.replace(PHONE_RE,'').length);
-          const clean=this.textContent.replace(PHONE_RE,'');
-          if(!clean.length){ this.textContent=''; processing=false; return; }
-          const formatted=F.formatText(clean,'phone');
-          if(formatted!==oldText){
-            this.textContent=formatted;
-            const pos=clean.length>oldLen?formatted.length:Math.min(rng&&this.firstChild?rng.startOffset:0,formatted.length);
-            if(this.firstChild&&this.firstChild.nodeType===Node.TEXT_NODE) try{
-              const nr=document.createRange(); nr.setStart(this.firstChild,Math.min(Math.max(0,pos),formatted.length)); nr.collapse(true);
-              const ns=window.getSelection(); ns.removeAllRanges(); ns.addRange(nr);
-            }catch(_){}
-          }
-          setTimeout(()=>processing=false,10);
-        });
-        field.addEventListener('blur',function(){ if(this.dataset.type==='phone') this.textContent=F.formatText(this.textContent.replace(PHONE_RE,'').trim(),'phone'); });
-        field.addEventListener('paste',function(e){ if(this.dataset.type!=='phone') return; e.preventDefault(); this.textContent=F.formatText((e.clipboardData||window.clipboardData).getData('text').replace(PHONE_RE,'').trim(),'phone'); this.dispatchEvent(new Event('input',{bubbles:true})); });
-      });
-    }
-    
-    // Add synchronization between contact info and client confirmation
-    const contactInfo = document.querySelector('.contact-info');
-    const clientConfirmation = document.querySelector('.client-confirmation');
-    if (contactInfo && clientConfirmation) {
-      const contactFields = contactInfo.querySelectorAll('.editable-field');
-      const clientFields = clientConfirmation.querySelectorAll('.editable-field');
-      const syncContent=(sourceField,targetField)=>{if(!sourceField||!targetField)return;const content=sourceField.textContent.trim();if(content)targetField.textContent=sourceField.dataset.type==='phone'?F.formatText(content,'phone'):content}
-      contactFields.forEach((field,index)=>{field.addEventListener('input',()=>syncContent(field,clientFields[index]));field.addEventListener('blur',()=>syncContent(field,clientFields[index]))})
-    }
-    
-    // Initialize phone formatting
+    setupLogoUpload();
+    setupContactSync();
     setupPhoneFormatting();
-    
-    const setupPlainTextPasteHandling=()=>{
-      document.querySelectorAll(SEL_EDITABLE).forEach(field=>{
-        if(field.dataset.pasteHandlerAdded||field.dataset.type==='phone') return;
-        field.dataset.pasteHandlerAdded='true';
-        field.addEventListener('paste',function(e){
-          e.preventDefault();
-          const txt=(this.dataset.type==='email'?(e.clipboardData||window.clipboardData).getData('text').replace(/\s/g,'').trim():(e.clipboardData||window.clipboardData).getData('text').trim());
-          const sel=window.getSelection();
-          if(sel.rangeCount>0){ const r=sel.getRangeAt(0); r.deleteContents(); const node=document.createTextNode(txt); r.insertNode(node); r.setStartAfter(node); r.collapse(true); sel.removeAllRanges(); sel.addRange(r); }
-          else{ this.textContent=txt; const r=document.createRange(); r.selectNodeContents(this); r.collapse(false); sel.removeAllRanges(); sel.addRange(r); }
-          this.dispatchEvent(new Event('input',{bubbles:true}));
-        });
-      });
-    };
     setupPlainTextPasteHandling();
-    const setupKeyboardShortcuts=()=>{
-      document.querySelectorAll('input.input-field, input.totals-input').forEach(input=>{
-        if(input.dataset.keyboardHandlerAdded) return; input.dataset.keyboardHandlerAdded='true';
-        input.addEventListener('keydown',function(e){
-          if(e.key==='Delete'&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!e.shiftKey&&this.selectionStart===this.selectionEnd&&this.selectionStart===this.value.length&&this.value.length>0){ e.preventDefault(); this.value=''; this.dispatchEvent(new Event('input',{bubbles:true})); this.dispatchEvent(new Event('change',{bubbles:true})); }
-        });
-      });
-      document.querySelectorAll(SEL_EDITABLE).forEach(field=>{
-        if(field.dataset.keyboardHandlerAdded||field.dataset.type==='phone') return; field.dataset.keyboardHandlerAdded='true';
-        field.addEventListener('keydown',function(e){
-          if(e.key!=='Delete'||e.ctrlKey||e.metaKey||e.altKey||e.shiftKey) return;
-          const sel=window.getSelection(); if(sel.rangeCount===0) return;
-          const r=sel.getRangeAt(0); if(!r.collapsed) return;
-          const len=(this.firstChild&&this.firstChild.nodeType===Node.TEXT_NODE)?this.firstChild.textContent.length:(this.textContent||'').length;
-          const atEnd=(r.startContainer===this||r.startContainer.parentNode===this)?r.startOffset===len:(r.startContainer.nodeType===Node.TEXT_NODE&&r.startOffset===r.startContainer.textContent.length);
-          if(atEnd&&(this.textContent||'').length>0){ e.preventDefault(); this.textContent=''; this.dispatchEvent(new Event('input',{bubbles:true})); }
-        });
-      });
-    };
     setupKeyboardShortcuts();
-  }catch{}
+  } catch (_) {}
 }
 init();
 });
